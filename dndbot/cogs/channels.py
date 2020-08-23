@@ -6,9 +6,10 @@ import logging
 
 log = logging.getLogger('channels')
 
+
 class DMCategory:
     def __init__(self, cog, guild_id: int, category_id: int, owner_id: int, hub_id: int, allowed: list = None,
-                 roles: list = None):
+                 roles: list = None, archived: list = None):
         self.cog = cog
         self.guild = cog.bot.get_guild(guild_id)
         self.category = self.guild.get_channel(category_id)
@@ -16,19 +17,28 @@ class DMCategory:
         self.owner = cog.bot.get_user(owner_id)
         self.allowed = allowed
         self.roles = roles
+        self.archived = archived
         self.DM_CATEGORY_PERMS = discord.PermissionOverwrite(
             read_messages=True,
             send_messages=True,
             manage_messages=True,
-            manage_channels=True
+            manage_channels=True,
+            read_message_history=True
         )
         self.DM_ALLOWED_PERMS = discord.PermissionOverwrite(
             read_messages=True,
-            send_messages=True
+            send_messages=True,
+            read_message_history=True,
         )
         self.OTHER_CATEGORY_PERMS = discord.PermissionOverwrite(
             read_messages=False,
-            send_messages=False
+            send_messages=False,
+            read_message_history=False
+        )
+        self.ARCHIVED_PERMS = discord.PermissionOverwrite(
+            read_messages=True,
+            send_messages=False,
+            read_message_history=True
         )
         self.update()
 
@@ -38,7 +48,8 @@ class DMCategory:
         category_id = int(list(data.keys())[0])
         spec = data[str(category_id)]
         return DMCategory(cog=cog, guild_id=guild_id, category_id=category_id, hub_id=spec['hub_id'],
-                          owner_id=spec['owner'], allowed=spec['allowed'], roles=spec['roles'])
+                          owner_id=spec['owner'], allowed=spec['allowed'], roles=spec['roles'],
+                          archived=spec['archived'])
 
     @staticmethod
     def from_ctx(ctx, cog):
@@ -80,7 +91,8 @@ class DMCategory:
         return {'owner': self.owner.id,
                 'hub_id': self.hub.id,
                 'allowed': self.allowed,
-                'roles': self.roles
+                'roles': self.roles,
+                'archived': self.archived
                 }
 
     async def update_channels(self):
@@ -92,7 +104,10 @@ class DMCategory:
                 role = self.guild.get_role(role_id)
                 if role is None:
                     self.roles.remove(role_id)
-                await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS)
+                if channel.id in self.archived:
+                    await channel.set_permissions(role, overwrite=self.ARCHIVED_PERMS)
+                else:
+                    await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS)
         self.update()
 
     async def allow(self, user_id: int):
@@ -122,7 +137,10 @@ class DMCategory:
         for channel in self.category.channels:
             if channel.id == self.hub.id:  # Skip Hub
                 continue
-            await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS)
+            if channel.id in self.archived:
+                await channel.set_permissions(role, overwrite=self.ARCHIVED_PERMS)
+            else:
+                await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS)
         self.update()
 
     async def remove_role(self, role: discord.Role):
@@ -135,6 +153,18 @@ class DMCategory:
                 continue
             await channel.set_permissions(role, overwrite=None)
         self.update()
+
+    async def archive(self, channel: discord.TextChannel):
+        if channel.id in self.archived:
+            return -1
+        self.archived.append(channel.id)
+        await self.update_channels()
+
+    async def unarchive(self, channel: discord.TextChannel):
+        if channel.id not in self.archived:
+            return -1
+        self.archived.remove(channel.id)
+        await self.update_channels()
 
     def __str__(self):
         return f'DMCategory | Server: {self.guild.name} | Category: {self.category.name} | Hub Channel: {self.hub.name}'
@@ -214,7 +244,8 @@ class QuestChannels(commands.Cog):
         }
         new_cat = await guild.create_category(name=f'{ctx.author.display_name}\'s Category', overwrites=overwrites)
         dm_hub = await guild.create_text_channel(name=f'dm-hub-{str(new_cat.id)[::8]}', category=new_cat)
-        data['categories'][str(new_cat.id)] = {'owner': ctx.author.id, 'hub_id': dm_hub.id, 'allowed': [], 'roles': []}
+        data['categories'][str(new_cat.id)] = {'owner': ctx.author.id, 'hub_id': dm_hub.id, 'allowed': [], 'roles': [],
+                                               'archived': []}
         self.update(guild.id, data)
         await ctx.send('DM category created.')
         await dm_hub.send('Welcome to your new DM channel! First thing I\'d recommend changing is the name.\n'
@@ -292,7 +323,7 @@ class QuestChannels(commands.Cog):
         result = await cat.add_role(role)
         if result == -1:
             return await ctx.send(f'Role already in allowed list.')
-        await ctx.send(f'Added {role.mention} to your RP channels.')
+        await ctx.send(f'Added {role.name} to your RP channels.')
 
     @dm_all_allowrole.error
     async def dm_all_allowrole_nf(self, ctx, error):
@@ -308,14 +339,14 @@ class QuestChannels(commands.Cog):
         result = await cat.remove_role(role)
         if result == -1:
             return await ctx.send(f'Role not in allowed list.')
-        await ctx.send(f'Removed {role.mention} from your RP channels.')
+        await ctx.send(f'Removed {role.name} from your RP channels.')
 
     @dm_all_removerole.error
     async def dm_all_removerole_nf(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send('Role not found.')
 
-    @dm_group.command(name='updaterole', description='Updates all your channels with current roles.')
+    @dm_group.command(name='updaterole', description='Updates all your channels with current roles.', aliases=['uc'])
     async def dm_all_update(self, ctx):
         """Remove a role from RP channels by removing perms."""
         cat = DMCategory.from_ctx(ctx, self)
@@ -334,18 +365,30 @@ class QuestChannels(commands.Cog):
             role = ctx.guild.get_role(role_id)
             if role is None:
                 continue
-            message += f'<:white_medium_small_square:746529103233941514> {role.mention}\n'
+            message += f'<:white_medium_small_square:746529103233941514> {role.name}\n'
         await ctx.send(message)
 
-    @dm_group.command(name='test', hidden=True)
-    @checks.is_owner()
-    async def dm_test(self, ctx):
-        data = self.get_server(ctx.guild.id)
-        cat_id = self.get_cat_id(ctx.guild, ctx.author)
-        if cat_id is None:
-            return await ctx.send('No category found in this server.')
-        cat = DMCategory.from_dict(self, ctx.guild.id, {str(cat_id): data['categories'][str(cat_id)]})
-        await ctx.send(cat)
+    @dm_group.command(name='archive', description='Archives a RP channel.')
+    async def dm_rp_archive(self, ctx, channel: discord.TextChannel):
+        """Archives a channel"""
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        result = await cat.archive(channel)
+        if result == -1:
+            return await ctx.send(f'Channel already in archived list.')
+        await ctx.send(f'Added {channel.name} to your archived channels.')
+
+    @dm_group.command(name='unarchive', description='Unarchives a RP channel')
+    async def dm_rp_unarchive(self, ctx, channel: discord.TextChannel):
+        """Unarchives a channel"""
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        result = await cat.archive(channel)
+        if result == -1:
+            return await ctx.send(f'Channel not in archived list.')
+        await ctx.send(f'Removed {channel.name} from your archived channels.')
 
 
 def setup(bot):
