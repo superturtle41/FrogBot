@@ -13,8 +13,6 @@ services:
     volumes:
       - mongo_data:/data/db
       - ./scripts/init_db.sh:/docker-entrypoint-initdb.d/init_db.sh:ro
-    ports:
-      - 27017:27017
   dnd_bot:
     image: ${CI_REGISTRY_IMAGE-local}/dndbot:${CI_COMMIT_SHORT_SHA-local}
     depends_on:
