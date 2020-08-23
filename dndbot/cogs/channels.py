@@ -2,6 +2,142 @@ import discord
 import utils.checks as checks
 from discord.ext import commands
 from utils.functions import get_positivity
+import logging
+
+log = logging.getLogger('channels')
+
+class DMCategory:
+    def __init__(self, cog, guild_id: int, category_id: int, owner_id: int, hub_id: int, allowed: list = None,
+                 roles: list = None):
+        self.cog = cog
+        self.guild = cog.bot.get_guild(guild_id)
+        self.category = self.guild.get_channel(category_id)
+        self.hub = self.guild.get_channel(hub_id)
+        self.owner = cog.bot.get_user(owner_id)
+        self.allowed = allowed
+        self.roles = roles
+        self.DM_CATEGORY_PERMS = discord.PermissionOverwrite(
+            read_messages=True,
+            send_messages=True,
+            manage_messages=True,
+            manage_channels=True
+        )
+        self.DM_ALLOWED_PERMS = discord.PermissionOverwrite(
+            read_messages=True,
+            send_messages=True
+        )
+        self.OTHER_CATEGORY_PERMS = discord.PermissionOverwrite(
+            read_messages=False,
+            send_messages=False
+        )
+        self.update()
+
+    @staticmethod
+    def from_dict(cog, guild_id: int, data: dict):
+        # data = {'CAT_ID': {'owner': OWNER_ID, 'hub_id': HUB_CHANNEL_ID, 'allowed': [USER_ID], 'roles': [ROLE_ID]}}
+        category_id = int(list(data.keys())[0])
+        spec = data[str(category_id)]
+        return DMCategory(cog=cog, guild_id=guild_id, category_id=category_id, hub_id=spec['hub_id'],
+                          owner_id=spec['owner'], allowed=spec['allowed'], roles=spec['roles'])
+
+    @staticmethod
+    def from_ctx(ctx, cog):
+        # Need to get the data
+        db = cog.db
+        server = db.find_one({'_id': ctx.guild.id})
+        if server is None:
+            base = {'_id': ctx.guild.id, 'categories': {}}
+            db.insert_one(base)
+            server_data = base
+        else:
+            server_data = server
+        # Now we have the whole server's data
+        exists = False
+        cat_id = None
+        for category in server_data['categories']:
+            if server_data['categories'][category]['owner'] == ctx.author.id:
+                exists = True
+                cat_id = int(category)
+        if exists:
+            data = {str(cat_id): server_data['categories'][str(cat_id)]}
+        else:
+            return None
+
+        return DMCategory.from_dict(cog=cog, guild_id=ctx.guild.id, data=data)
+
+    def update(self):
+        db = self.cog.db
+        server_data = db.find_one({'_id': self.guild.id})
+        if server_data is not None:
+            server_data['categories'][str(self.category.id)] = self.to_dict()
+            db.replace_one({'_id': self.guild.id}, server_data)
+        else:
+            db.insert_one({'_id': self.guild.id, 'categories': {
+                {str(self.category.id): self.to_dict()}
+            }})
+
+    def to_dict(self):
+        return {'owner': self.owner.id,
+                'hub_id': self.hub.id,
+                'allowed': self.allowed,
+                'roles': self.roles
+                }
+
+    async def update_channels(self):
+        """Adds role overrides to every RP Channel. This is used when new channels are created."""
+        for channel in self.category.channels:
+            if channel.id == self.hub.id:  # Skip Hub
+                continue
+            for role_id in self.roles:
+                role = self.guild.get_role(role_id)
+                if role is None:
+                    self.roles.remove(role_id)
+                await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS)
+        self.update()
+
+    async def allow(self, user_id: int):
+        """Allows a user into the DM hub by user id."""
+        user = self.cog.bot.get_user(user_id)
+        if user.id in self.allowed:
+            return -1
+        self.allowed.append(user.id)
+        await self.hub.set_permissions(user, overwrite=self.DM_ALLOWED_PERMS)
+        self.update()
+        return 0
+
+    async def deny(self, user_id: int):
+        """Removes a user from the DM hub by user id."""
+        user = self.cog.bot.get_user(user_id)
+        if user.id not in self.allowed:
+            return -1
+        self.allowed.remove(user.id)
+        await self.hub.set_permissions(user, overwrite=None)
+        self.update()
+
+    async def add_role(self, role: discord.Role):
+        """Adds a role to every current RP Channel"""
+        if role.id in self.roles:
+            return -1
+        self.roles.append(role.id)
+        for channel in self.category.channels:
+            if channel.id == self.hub.id:  # Skip Hub
+                continue
+            await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS)
+        self.update()
+
+    async def remove_role(self, role: discord.Role):
+        """Removes a role from every current RP channel."""
+        if role.id not in self.roles:
+            return -1
+        self.roles.remove(role.id)
+        for channel in self.category.channels:
+            if channel.id == self.hub.id:  # Skip Hub
+                continue
+            await channel.set_permissions(role, overwrite=None)
+        self.update()
+
+    def __str__(self):
+        return f'DMCategory | Server: {self.guild.name} | Category: {self.category.name} | Hub Channel: {self.hub.name}'
 
 
 class QuestChannels(commands.Cog):
@@ -22,7 +158,6 @@ class QuestChannels(commands.Cog):
             read_messages=False,
             send_messages=False
         )
-        # example_structure = {'_id': SERVER_ID, 'categories': {'CAT_ID': {'owner': OWNER_ID}}}
 
     def get_server(self, server_id):
         """Returns the server from the database."""
@@ -51,6 +186,13 @@ class QuestChannels(commands.Cog):
         if not exists:
             return None
         return cat_id
+
+    def get_hub_from_cat(self, guild, cat_id):
+        data = self.get_server(guild.id)
+        if str(cat_id) in data['categories'] and 'hub_id' in data['categories'][str(cat_id)]:
+            return data['categories'][str(cat_id)]['hub_id']
+        else:
+            return False
 
     @commands.group(name='dm', description='Base command for all other DM Channel commands.'
                                            ' All subcommands require DM role.')
@@ -89,13 +231,8 @@ class QuestChannels(commands.Cog):
         def chk(m):
             return m.author == author and m.channel == channel
 
-        exists = False
-        cat_id = None
-        for category_id in data['categories']:
-            if data['categories'][category_id]['owner'] == ctx.author.id:
-                exists = True
-                cat_id = category_id
-        if not exists:
+        cat_id = self.get_cat_id(guild, author)
+        if not cat_id:
             return await ctx.send('No DM category stored in records.')
 
         category = guild.get_channel(int(cat_id))
@@ -115,63 +252,24 @@ class QuestChannels(commands.Cog):
     @dm_group.command(name='allow', description='Allow a member to your DM channel.')
     async def dm_hub_allow(self, ctx, mem: discord.Member = None):
         """Allow a user into a DM hub by adding their perms."""
-        guild = ctx.guild
-        data = self.get_server(guild.id)
-
-        exists = False
-        hud_id = None
-        cat_id = None
-        for category_id in data['categories']:
-            if data['categories'][category_id]['owner'] == ctx.author.id and 'hub_id' in data['categories'][
-                category_id]:
-                exists = True
-                hud_id = data['categories'][category_id]['hub_id']
-                cat_id = category_id
-        if not exists:
-            return await ctx.send('No DM hub stored in records.')
-        if mem.id in data['categories'][cat_id]['allowed']:
-            return await ctx.send('Member already on allowed list.')
-
-        channel = guild.get_channel(int(hud_id))
-        if channel is None:
-            return await ctx.send('DM Channel not found, report to owner of bot.')
-        if mem is None:
-            return await ctx.send('The person you would like to allow (mention) is the only required argument.')
-        await channel.set_permissions(mem, overwrite=self.DM_ALLOWED_PERMS,
-                                      reason=f'Requested by {ctx.author.display_name}')
-        data['categories'][cat_id]['allowed'].append(mem.id)
-        self.update(guild.id, data)
-        await ctx.send(f'{mem.display_name} added to your hub channel.')
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        result = await cat.allow(mem.id)
+        if result == -1:
+            return await ctx.send(f'User already in allowed list.')
+        await ctx.send(f'Added {mem.display_name} to your DM Hub.')
 
     @dm_group.command(name='deny', description='Remove a member from your DM channel.')
     async def dm_hub_deny(self, ctx, mem: discord.Member = None):
-        """Deny a user into a DM hub by adding their perms."""
-        guild = ctx.guild
-        data = self.get_server(guild.id)
-
-        exists = False
-        hud_id = None
-        cat_id = None
-        for category_id in data['categories']:
-            if data['categories'][category_id]['owner'] == ctx.author.id \
-                    and 'hub_id' in data['categories'][category_id]:
-                exists = True
-                hud_id = data['categories'][category_id]['hub_id']
-                cat_id = category_id
-        if not exists:
-            return await ctx.send('No DM hub stored in records.')
-        if mem.id not in data['categories'][cat_id]['allowed']:
-            return await ctx.send('Member not on allowed list.')
-
-        channel = guild.get_channel(int(hud_id))
-        if channel is None:
-            return await ctx.send('DM Channel not found, report to owner of bot.')
-        if mem is None:
-            return await ctx.send('The person you would like to remove (mention) is the only required argument.')
-        await channel.set_permissions(mem, overwrite=None, reason=f'Requested by {ctx.author.display_name}')
-        data['categories'][cat_id]['allowed'].remove(mem.id)
-        self.update(guild.id, data)
-        await ctx.send(f'{mem.display_name} removed from your hub channel.')
+        """Deny a user from a DM hub by removing their perms."""
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        result = await cat.deny(mem.id)
+        if result == -1:
+            return await ctx.send(f'User not in allowed list.')
+        await ctx.send(f'Removed {mem.display_name} to your DM Hub.')
 
     @dm_group.command(name='list', description='List allowed people in your channel.')
     async def dm_hub_list(self, ctx):
@@ -187,82 +285,67 @@ class QuestChannels(commands.Cog):
 
     @dm_group.command(name='addrole', description='Adds a quest role to all current channels.')
     async def dm_all_allowrole(self, ctx, role: discord.Role):
-        data = self.get_server(ctx.guild.id)
-        category_id = self.get_cat_id(ctx.guild, ctx.author)
-        if not category_id:
-            return await ctx.send('No DM category stored in records.')
-        if role.id in data['categories'][category_id]['roles']:
-            return await ctx.send('Role already in list. Update to apply to new channels.')
-        data['categories'][category_id]['roles'].append(role.id)
-        self.update(ctx.guild.id, data)
-        category = ctx.guild.get_channel(int(category_id))
-        if not category:
-            return await ctx.send('No DM category stored in records.')
-        for channel in category.channels:
-            if channel.id == data['categories'][category_id]['hub_id']:  # Skip Hub
-                continue
-            await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS,
-                                          reason=f'Requested by {ctx.author.display_name}')
-        await ctx.send(f'Added Role {role.mention} to your RP channels (not your hub).')
+        """Allow a role into RP channels by adding perms."""
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        result = await cat.add_role(role)
+        if result == -1:
+            return await ctx.send(f'Role already in allowed list.')
+        await ctx.send(f'Added {role.mention} to your RP channels.')
+
+    @dm_all_allowrole.error
+    async def dm_all_allowrole_nf(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send('Role not found.')
 
     @dm_group.command(name='removerole', description='Removes a quest role to all current channels.')
     async def dm_all_removerole(self, ctx, role: discord.Role):
-        data = self.get_server(ctx.guild.id)
-        category_id = self.get_cat_id(ctx.guild, ctx.author)
-        if not category_id:
-            return await ctx.send('No DM category stored in records.')
-        if role.id not in data['categories'][category_id]['roles']:
-            return await ctx.send('Role not in existing lists.')
-        data['categories'][category_id]['roles'].remove(role.id)
-        self.update(ctx.guild.id, data)
-        category = ctx.guild.get_channel(int(category_id))
-        if not category:
-            return await ctx.send('No DM category stored in records.')
-        for channel in category.channels:
-            if channel.id == data['categories'][category_id]['hub_id']:  # Skip Hub
-                continue
-            await channel.set_permissions(role, overwrite=None,
-                                          reason=f'Requested by {ctx.author.display_name}')
-        await ctx.send(f'Removed role {role.mention} from your RP channels (not your hub).')
+        """Remove a role from RP channels by removing perms."""
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        result = await cat.remove_role(role)
+        if result == -1:
+            return await ctx.send(f'Role not in allowed list.')
+        await ctx.send(f'Removed {role.mention} from your RP channels.')
+
+    @dm_all_removerole.error
+    async def dm_all_removerole_nf(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send('Role not found.')
 
     @dm_group.command(name='updaterole', description='Updates all your channels with current roles.')
     async def dm_all_update(self, ctx):
-        data = self.get_server(ctx.guild.id)
-        category_id = self.get_cat_id(ctx.guild, ctx.author)
-        if not category_id:
-            return await ctx.send('No DM category stored in records.')
-        category = ctx.guild.get_channel(int(category_id))
-        if not category:
-            return await ctx.send('No DM category stored in records.')
-        for channel in category.channels:
-            if channel.id == data['categories'][category_id]['hub_id']:  # Skip Hub
-                continue
-            for role_id in data['categories'][category_id]['roles']:
-                role = discord.get_role(role_id)
-                if role is None:
-                    continue
-                await channel.set_permissions(role, overwrite=self.DM_ALLOWED_PERMS, reason=f'Requested by {ctx.author.display_name}')
+        """Remove a role from RP channels by removing perms."""
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        await cat.update_channels()
         await ctx.send(f'Updated roles for your RP channels (not your hub).')
 
     @dm_group.command(name='listroles', description='List current roles allowed in RP channels.')
     async def dm_all_listroles(self, ctx):
-        data = self.get_server(ctx.guild.id)
-        category_id = self.get_cat_id(ctx.guild, ctx.author)
-        if not category_id:
-            return await ctx.send('No DM category stored in records.')
-        category = ctx.guild.get_channel(int(category_id))
-        if not category:
-            return await ctx.send('No DM category stored in records.')
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
         message = 'Allowed Roles in your RP channels:\n'
-        for channel in category.channels:
-            if channel.id == data['categories'][category_id]['hub_id']:  # Skip Hub
+        for role_id in cat.roles:
+            role = ctx.guild.get_role(role_id)
+            if role is None:
                 continue
-            for role_id in data['categories'][category_id]['roles']:
-                role = discord.get_role(role_id)
-                if role is None:
-                    continue
-                message += f'<:white_medium_small_square:746529103233941514> {role.mention}\n'
+            message += f'<:white_medium_small_square:746529103233941514> {role.mention}\n'
         await ctx.send(message)
+
+    @dm_group.command(name='test', hidden=True)
+    @checks.is_owner()
+    async def dm_test(self, ctx):
+        data = self.get_server(ctx.guild.id)
+        cat_id = self.get_cat_id(ctx.guild, ctx.author)
+        if cat_id is None:
+            return await ctx.send('No category found in this server.')
+        cat = DMCategory.from_dict(self, ctx.guild.id, {str(cat_id): data['categories'][str(cat_id)]})
+        await ctx.send(cat)
 
 
 def setup(bot):
