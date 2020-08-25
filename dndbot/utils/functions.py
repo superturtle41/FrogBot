@@ -24,14 +24,6 @@ def create_default_embed(bot, ctx) -> discord.Embed:
     return embed
 
 
-def get_uptime(bot):
-    started = bot.uptime
-    now = datetime.datetime.now()
-    difference = now - started
-    minutes = divmod(difference.total_seconds(), 60)
-    return minutes
-
-
 def auth_and_chan(ctx):
     """Message check: same author and channel"""
 

@@ -123,7 +123,7 @@ class REPL(commands.Cog):
             except discord.HTTPException as e:
                 await msg.channel.send('Unexpected error: `{}`'.format(e))
 
-    @commands.command(name="eval", description="Evaluates input.", hidden=False)
+    @commands.command(name="eval", description="Evaluates input.", hidden=True)
     @checks.is_owner()
     async def eval(self, ctx, *, cmd):
         """Input is interpreted as newline seperated statements.

@@ -1,6 +1,6 @@
 from discord.ext import commands
-from utils.functions import get_uptime, create_default_embed
 from utils.checks import is_owner
+from utils.functions import create_default_embed
 
 
 class Admin(commands.Cog):
@@ -22,12 +22,10 @@ class Admin(commands.Cog):
 
     @commands.command(name="uptime", description="Prints uptime of bot.", aliases=['up', 'info'])
     async def timeup(self, ctx):
-        minutes = get_uptime(self.bot)
         embed = create_default_embed(self.bot, ctx)
-        embed.title = "**Current Bot Uptime**"
-        embed.description = f'Bot has been running for ' \
-                            f'{int(minutes[0])} {"minutes" if minutes[0]>=2 or minutes[0]==0 else "minute"} ' \
-                            f'{round(minutes[1])} seconds. '
+        embed.title = '<:clock:743943384648908850> Current Uptime <:clock:743943384648908850>'
+        embed.description = f'{str(self.bot.uptime).split(".", 2)[0]}'
+        embed.add_field(name='Version', value=f'Current Version: {self.bot.version}')
         await ctx.send(embed=embed)
 
 
