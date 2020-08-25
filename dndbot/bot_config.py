@@ -19,3 +19,5 @@ mongo_host = os.getenv('MONGO_HOST', 'mongodb:27017')
 mongo_db = os.getenv('MONGO_DATABASE')
 mongo_user = os.getenv('MONGO_USERNAME')
 mongo_pass = os.getenv('MONGO_PASSWORD')
+
+current_version = os.getenv('VERSION', '0.4beta')
