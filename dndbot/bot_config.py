@@ -20,4 +20,4 @@ mongo_db = os.getenv('MONGO_DATABASE')
 mongo_user = os.getenv('MONGO_USERNAME')
 mongo_pass = os.getenv('MONGO_PASSWORD')
 
-version = os.getenv('VERSION', '0.4 Beta')
+version = os.getenv('VERSION', '0.5 Beta')
