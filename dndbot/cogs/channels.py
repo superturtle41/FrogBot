@@ -382,7 +382,7 @@ class QuestChannels(commands.Cog):
             return await ctx.send(f'Channel already in archived list.')
         await ctx.send(f'Added {channel.name} to your archived channels.')
 
-    @dm_group.command(name='unarchive', description='Unarchives a RP channel', aliases='ua')
+    @dm_group.command(name='unarchive', description='Unarchives a RP channel', aliases=['ua'])
     async def dm_rp_unarchive(self, ctx, channel: discord.TextChannel):
         """Unarchives a channel"""
         cat = DMCategory.from_ctx(ctx, self)

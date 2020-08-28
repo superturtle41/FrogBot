@@ -82,7 +82,12 @@ async def on_ready():
     bot.remove_command('help')
     log.info(f'>> {bot.user.name} Launched! <<')
     for cog in COGS:
-        bot.load_extension(cog)
+        log.debug(f'Loading {cog}')
+        try:
+            bot.load_extension(cog)
+        except:
+            exit(1)
+        log.debug(f'Loaded {cog}')
     log.info(f'>> Current Cogs: <<')
     log.info(f'>> {", ".join(bot.cogs)} <<')
     log.info(f'>> ID: f{bot.user.id} | Prefix: {config.prefix} <<')
