@@ -1,8 +1,9 @@
+import logging
+
 import discord
 import utils.checks as checks
 from discord.ext import commands
 from utils.functions import get_positivity
-import logging
 
 log = logging.getLogger('channels')
 
@@ -278,7 +279,9 @@ class QuestChannels(commands.Cog):
             await category.delete(reason=f'Requested by DM {ctx.author.display_name}')
             data['categories'].pop(str(cat_id))
             self.update(guild.id, data)
-        await ctx.author.send('Your DM category has been deleted.')
+            await ctx.author.send('Your DM category has been deleted.')
+        else:
+            await ctx.send('Operation Cancelled.')
 
     @dm_group.command(name='allow', description='Allow a member to your DM channel.')
     async def dm_hub_allow(self, ctx, mem: discord.Member = None):
@@ -314,7 +317,7 @@ class QuestChannels(commands.Cog):
             message += f'<:white_medium_small_square:746529103233941514> {member.display_name}\n'
         await ctx.send(message)
 
-    @dm_group.command(name='addrole', description='Adds a quest role to all current channels.')
+    @dm_group.command(name='addrole', description='Adds a quest role to all current channels.', aliases=['ar'])
     async def dm_all_allowrole(self, ctx, role: discord.Role):
         """Allow a role into RP channels by adding perms."""
         cat = DMCategory.from_ctx(ctx, self)
@@ -330,7 +333,7 @@ class QuestChannels(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send('Role not found.')
 
-    @dm_group.command(name='removerole', description='Removes a quest role to all current channels.')
+    @dm_group.command(name='removerole', description='Removes a quest role to all current channels.', aliases=['rr'])
     async def dm_all_removerole(self, ctx, role: discord.Role):
         """Remove a role from RP channels by removing perms."""
         cat = DMCategory.from_ctx(ctx, self)
@@ -355,7 +358,7 @@ class QuestChannels(commands.Cog):
         await cat.update_channels()
         await ctx.send(f'Updated roles for your RP channels (not your hub).')
 
-    @dm_group.command(name='listroles', description='List current roles allowed in RP channels.')
+    @dm_group.command(name='listroles', description='List current roles allowed in RP channels.', aliases=['lr'])
     async def dm_all_listroles(self, ctx):
         cat = DMCategory.from_ctx(ctx, self)
         if cat is None:
@@ -368,7 +371,7 @@ class QuestChannels(commands.Cog):
             message += f'<:white_medium_small_square:746529103233941514> {role.name}\n'
         await ctx.send(message)
 
-    @dm_group.command(name='archive', description='Archives a RP channel.')
+    @dm_group.command(name='archive', description='Archives a RP channel.', aliases=['a'])
     async def dm_rp_archive(self, ctx, channel: discord.TextChannel):
         """Archives a channel"""
         cat = DMCategory.from_ctx(ctx, self)
@@ -379,7 +382,7 @@ class QuestChannels(commands.Cog):
             return await ctx.send(f'Channel already in archived list.')
         await ctx.send(f'Added {channel.name} to your archived channels.')
 
-    @dm_group.command(name='unarchive', description='Unarchives a RP channel')
+    @dm_group.command(name='unarchive', description='Unarchives a RP channel', aliases='ua')
     async def dm_rp_unarchive(self, ctx, channel: discord.TextChannel):
         """Unarchives a channel"""
         cat = DMCategory.from_ctx(ctx, self)
@@ -389,6 +392,24 @@ class QuestChannels(commands.Cog):
         if result == -1:
             return await ctx.send(f'Channel not in archived list.')
         await ctx.send(f'Removed {channel.name} from your archived channels.')
+
+    @dm_group.command(name='listarchived', description='Lists current archived channels.', aliases=['la'])
+    async def dm_rp_listarchived(self, ctx):
+        """Lists currently archived channels"""
+        cat = DMCategory.from_ctx(ctx, self)
+        if cat is None:
+            return await ctx.send('Category does not exist')
+        message = 'Currently Archived Channels:\n'
+        removed = 0
+        for archived in cat.archived:
+            channel = cat.guild.get_channel(archived)
+            if channel is None:
+                removed += 1
+                cat.archived.pop(channel)
+            message += f'<:white_medium_small_square:746529103233941514> {channel.name}\n'
+        message += f'Removed {removed} channel(s) that couldn\'t be found.' if removed > 0 else ''
+        await ctx.send(message)
+        cat.update()
 
 
 def setup(bot):
