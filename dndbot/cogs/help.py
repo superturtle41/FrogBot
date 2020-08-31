@@ -75,7 +75,8 @@ class Help(commands.Cog):
                 help_embed.add_field(name=cog, value=field_value, inline=False)
             await ctx.send(embed=help_embed)
         else:
-            raise NotImplementedError()  # Help for one argument. Check to see if argument matches cog, and then command
+            raise NotImplementedError('Specific Help has not been implemented yet')
+            # Help for one argument. Check to see if argument matches cog, and then command
         return
 
 
