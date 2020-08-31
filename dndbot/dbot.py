@@ -64,12 +64,7 @@ class DnDBot(commands.Bot):
             log.warning(line)
 
 
-log_formatter = logging.Formatter('%(levelname)s:%(name)s: %(message)s')
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(log_formatter)
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(handler)
+logging.basicConfig(format='%(levelname)s:%(name)s: %(message)s', level=logging.INFO)
 log = logging.getLogger('bot')
 
 bot = DnDBot(case_insensitive=True)
@@ -82,17 +77,16 @@ async def on_ready():
     bot.remove_command('help')
     log.info(f'>> {bot.user.name} Launched! <<')
     for cog in COGS:
-        log.debug(f'Loading {cog}')
         try:
             bot.load_extension(cog)
         except:
             exit(1)
-        log.debug(f'Loaded {cog}')
     log.info(f'>> Current Cogs: <<')
     log.info(f'>> {", ".join(bot.cogs)} <<')
     log.info(f'>> ID: f{bot.user.id} | Prefix: {config.prefix} <<')
     if config.testing:
         log.info('Bot is in testing mode')
+    log.info('-------------')
     return
 
 
