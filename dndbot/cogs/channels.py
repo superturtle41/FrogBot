@@ -1,3 +1,5 @@
+import logging
+
 import discord
 import utils.checks as checks
 from discord.ext import commands

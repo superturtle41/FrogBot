@@ -11,7 +11,7 @@ from utils.checks import NotAuthorized
 from utils.functions import try_delete
 
 description = "WIP Economy bot for personal discord server"
-COGS = ['cogs.admin', 'cogs.help', 'cogs.repl', 'cogs.roles', 'cogs.channels']
+COGS = ['cogs.admin', 'cogs.utils', 'cogs.help', 'cogs.repl', 'cogs.roles', 'cogs.channels']
 
 
 def get_prefix(client, message):
@@ -34,6 +34,10 @@ class DnDBot(commands.Bot):
     def uptime(self):
         """Returns the current uptime of the bot"""
         return datetime.datetime.now() - self.launch_time
+
+    @property
+    def owner(self):
+        return self.DEV_ID
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
