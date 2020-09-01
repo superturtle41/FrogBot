@@ -153,6 +153,7 @@ class DMCategory:
                     await channel.set_permissions(role, overwrite=ARCHIVED_PERMS)
                 else:
                     await channel.set_permissions(role, overwrite=DM_ALLOWED_PERMS)
+                await channel.set_permissions(self.owner, overwrite=DM_CATEGORY_PERMS)
         self.update()
 
     async def allow(self, user_id: int):
