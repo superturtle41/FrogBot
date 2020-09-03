@@ -11,7 +11,7 @@ from utils.checks import NotAuthorized
 from utils.functions import try_delete
 
 description = "WIP Economy bot for personal discord server"
-COGS = ['cogs.admin', 'cogs.utils', 'cogs.help', 'cogs.repl', 'cogs.roles', 'cogs.channels']
+COGS = ['cogs.admin', 'cogs.utils', 'cogs.help', 'cogs.repl', 'cogs.roles', 'cogs.channels', 'cogs.gambling']
 
 
 def get_prefix(client, message):
@@ -54,14 +54,15 @@ class DnDBot(commands.Bot):
             msg = str(error) or "Missing Unknown Required Argument"
             return await ctx.send(f"Error: {msg}")
 
-        elif isinstance(error, commands.CommandInvokeError):
-            msg = str(error) or "Command raised an exception."
-            return await ctx.send(f"Error: {msg}")
+        # elif isinstance(error, commands.CommandInvokeError):
+        #     msg = str(error) or "Command raised an exception.
+        #     return await ctx.send(f"Error: {msg}")
         elif isinstance(error, NotAuthorized):
             await ctx.send('You are not authorized to use this command.')
         log.warning("Error caused by message: `{}`".format(ctx.message.content))
         for line in traceback.format_exception(type(error), error, error.__traceback__):
             log.warning(line)
+        # exit(1)
 
 
 logging.basicConfig(format='%(levelname)s:%(name)s: %(message)s', level=logging.INFO)

@@ -2,6 +2,7 @@ import discord
 from utils.constants import DM_CATEGORY_PERMS, DM_ALLOWED_PERMS, OTHER_CATEGORY_PERMS, ARCHIVED_PERMS
 from utils.functions import get_positivity
 import logging
+import datetime
 
 
 class DMCategory:
@@ -214,3 +215,39 @@ class DMCategory:
 
     def __str__(self):
         return f'DMCategory | Server: {self.guild.name} | Category: {self.category.name} | Hub Channel: {self.hub.name}'
+
+
+class GamblingUser:
+    def __init__(self, user: discord.User, money: int, last_daily_kit: datetime.datetime):
+        self.money = money
+        self.last_daily_kit = last_daily_kit
+        self.user = user
+
+    @property
+    def is_daily_available(self):
+        """If the last kit + 1 day is before now, return True."""
+        return (self.last_daily_kit + datetime.timedelta(days=1)) < datetime.datetime.now()
+
+    @property
+    def next_daily(self):
+        now = datetime.datetime.now()
+        available = self.last_daily_kit + datetime.timedelta(days=1)
+        if available < now:
+            return now
+        else:
+            return now + (available - now)
+
+    @staticmethod
+    def time_format():
+        return "%Y-%m-%d %I:%M:%S.%f"
+
+    def to_dict(self):
+        return {
+            '_id': self.user.id,
+            'money': self.money,
+            'last_daily': self.last_daily_kit.strftime(GamblingUser.time_format())
+        }
+
+    def __str__(self):
+        return f'**Gambling User**\nName: {self.user.display_name}\nMoney: {self.money}\n' \
+               f'Last Kit: {self.last_daily_kit.strftime(GamblingUser.time_format())}'
