@@ -21,5 +21,10 @@ COPY --chown=dndbot:dndbot . .
 # Download AWS pubkey to connect to documentDB
 #RUN if [ "$ENVIRONMENT" = "production" ]; then wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem; fi
 
+RUN pip install discordhealthcheck
+
+# The `|| exit 1` isn't required but it's good practice anyway.
+HEALTHCHECK CMD discordhealthcheck || exit 1
+
 WORKDIR /home/dndbot
 ENTRYPOINT python dndbot/dbot.py $DBOT_ARGS

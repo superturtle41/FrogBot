@@ -9,6 +9,7 @@ import pymongo
 from discord.ext import commands
 from utils.checks import NotAuthorized
 from utils.functions import try_delete
+import discordhealthcheck
 
 description = "WIP Economy bot for personal discord server"
 COGS = ['cogs.admin', 'cogs.utils', 'cogs.help', 'cogs.repl', 'cogs.roles', 'cogs.channels', 'cogs.gambling']
@@ -29,6 +30,7 @@ class DnDBot(commands.Bot):
         self.db = pymongo.MongoClient(host=config.mongo_host, username=config.mongo_user, password=config.mongo_pass, authSource=config.mongo_db)
         self.mdb = self.db[config.mongo_db]
         self.version = config.version
+        self.healthcheck_server = discordhealthcheck.start(self)
 
     @property
     def uptime(self):
