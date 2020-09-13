@@ -14,6 +14,7 @@ class QuestChannels(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = self.bot.mdb['quest-channels']
+        self.messages = {'no_cat': "DM Category not found."}
 
     @commands.group(name='dm', description='Base command for all other DM Channel commands.'
                                            ' All subcommands require DM role.')
