@@ -27,6 +27,8 @@ class Utils(commands.Cog):
     @commands.command(name='amongus', description='Toggles muted/unmuted channel', aliases=['atm'])
     async def amongus(self, ctx):
         vc = ctx.message.author.voice.channel
+        if vc is None:
+            return ctx.send('Not in voice channel.')
         if vc.id in self.muted:
             for member in vc.members:
                 await member.edit(mute=False)
