@@ -5,6 +5,7 @@ from utils.functions import create_default_embed
 class Utils(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.muted = []
 
     @commands.command(name="uptime", description="Prints uptime of bot.", aliases=['up', 'info'])
     async def timeup(self, ctx):
@@ -22,6 +23,18 @@ class Utils(commands.Cog):
             return await ctx.send(message)
         else:
             return await ctx.send(f'{ctx.author.display_name}: **{message}**')
+
+    @commands.command(name='amongus', description='Toggles muted/unmuted channel', aliases=['atm'])
+    async def amongus(self, ctx):
+        vc = ctx.message.author.voice.voice_channel
+        if vc.id in self.muted:
+            for member in vc.members:
+                await member.edit(mute=False)
+            self.muted.remove(vc.id)
+        else:
+            self.muted.append(vc.id)
+            for member in vc.members:
+                await member.edit(mute=True)
 
 
 def setup(bot):

@@ -79,6 +79,8 @@ async def on_ready():
     for cog in COGS:
         try:
             bot.load_extension(cog)
+        except commands.ExtensionAlreadyLoaded:
+            pass
         except:
             exit(1)
     log.info(f'>> Current Cogs: <<')
