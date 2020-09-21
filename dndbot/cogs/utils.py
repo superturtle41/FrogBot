@@ -1,5 +1,6 @@
 from discord.ext import commands
 from utils.functions import create_default_embed
+from utils.checks import is_owner, is_guild_owner
 
 
 class Utils(commands.Cog):
@@ -25,6 +26,7 @@ class Utils(commands.Cog):
             return await ctx.send(f'{ctx.author.display_name}: **{message}**')
 
     @commands.command(name='amongus', description='Toggles muted/unmuted channel', aliases=['atm'])
+    @commands.check_any(is_owner(), is_guild_owner())
     async def amongus(self, ctx):
         vc = ctx.message.author.voice.channel
         if vc is None:
