@@ -25,21 +25,6 @@ class Utils(commands.Cog):
         else:
             return await ctx.send(f'{ctx.author.display_name}: **{message}**')
 
-    @commands.command(name='amongus', description='Toggles muted/unmuted channel', aliases=['atm'])
-    @commands.check_any(is_owner(), is_guild_owner())
-    async def amongus(self, ctx):
-        vc = ctx.message.author.voice.channel
-        if vc is None:
-            return ctx.send('Not in voice channel.')
-        if vc.id in self.muted:
-            for member in vc.members:
-                await member.edit(mute=False)
-            self.muted.remove(vc.id)
-        else:
-            self.muted.append(vc.id)
-            for member in vc.members:
-                await member.edit(mute=True)
-
 
 def setup(bot):
     bot.add_cog(Utils(bot))
