@@ -55,6 +55,19 @@ class Utils(commands.Cog):
         else:
             self.dead[str(ctx.vc.id)].append(user.id)
 
+    @commands.command(name='resetgame', description='Reset dead list and unmute channel.', aliases=['art'])
+    @commands.check_any(is_owner(), is_guild_owner(), commands.guild_only())
+    async def amongus_reset(self, ctx):
+        user = ctx.author
+        vc = get_vc_from_user(user)
+        if vc is None:
+            return await ctx.send('Error: Not in voice channel.')
+        if str(ctx.vc.id) not in self.dead:
+            self.dead[str(ctx.vc.id)] = []
+        self.dead[str(ctx.vc.id)] = []
+        self.channel_mute_toggle(vc, mute=False)
+
+
 
 def setup(bot):
     bot.add_cog(Utils(bot))
