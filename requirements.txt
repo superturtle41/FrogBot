@@ -1,3 +1,5 @@
 discord.py
 dpytest
 pymongo
+pytest
+discordhealthcheck
