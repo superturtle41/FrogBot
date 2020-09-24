@@ -12,7 +12,8 @@ from utils.functions import try_delete
 import discordhealthcheck
 
 description = "WIP Economy bot for personal discord server"
-COGS = ['cogs.admin', 'cogs.utils', 'cogs.help', 'cogs.repl', 'cogs.roles', 'cogs.channels', 'cogs.gambling']
+COGS = ['cogs.admin', 'cogs.utils', 'cogs.help', 'cogs.repl',
+        'cogs.roles', 'cogs.channels', 'cogs.gambling', 'cogs.amongus']
 
 
 def get_prefix(client, message):
@@ -83,7 +84,7 @@ async def on_ready():
         try:
             bot.load_extension(cog)
         except commands.ExtensionAlreadyLoaded:
-            pass
+            log.info(f"Loading existing Cog: {cog}")
         except:
             exit(1)
     log.info(f'>> Current Cogs: <<')
