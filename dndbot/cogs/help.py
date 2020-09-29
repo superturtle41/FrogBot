@@ -49,6 +49,7 @@ class Help(commands.Cog):
     )
     async def help_command(self, ctx, *args: str):
         help_embed = create_default_embed(self.bot, ctx)
+        help_embed.title = '--- Help for Frog Bot ---'
         if len(args) == 0:
             for cog in self.bot.cogs:
                 field_value = ""
