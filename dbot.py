@@ -10,7 +10,7 @@ from pymongo import MongoClient
 import bot_config as config
 from utils.functions import try_delete
 
-COGS = ('cogs.eval', 'cogs.admin')
+COGS = ('cogs.util', 'cogs.eval', 'cogs.admin')
 
 
 def get_prefix(client, message):
