@@ -10,7 +10,10 @@ from pymongo import MongoClient
 import bot_config as config
 from utils.functions import try_delete
 
-COGS = ('cogs.util', 'cogs.eval', 'cogs.admin')
+COGS = (
+    'cogs.util', 'cogs.eval', 'cogs.admin',
+    'cogs.quest_roles'
+)
 
 
 def get_prefix(client, message):
@@ -56,6 +59,7 @@ class FrogBot(commands.Bot):
         for muted_user in self.mdb['muted_clients'].find():
             muted.append(muted_user['_id'])
         self.muted = muted
+        return muted
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
@@ -102,7 +106,7 @@ log = logging.getLogger('bot')
 @bot.event
 async def on_ready():
 
-    await bot.update_muted_from_db()
+    bot.update_muted_from_db()
     await bot.update_status_from_db()
 
     ready_message = f'\n---------------------------------------------------\n' \
