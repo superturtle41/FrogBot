@@ -20,17 +20,18 @@ class Admin(commands.Cog):
     @commands.command(name='change_status', description='Owner Only - Changes the bot\'s status.', hidden=True)
     @is_owner()
     async def change_status(self, ctx, *, value: str):
-        activity = discord.Game(name=f'{value} | {ctx.bot.prefix}help')
-        await ctx.bot.change_presence(activity=activity)
+        if value != 'reset':
+            ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'}, {'$set': {'status': value}}, upsert=True)
+        else:
+            ctx.bot.mdb['bot_settings'].delete_one({'setting': 'status'})
+        await ctx.bot.update_status_from_db()
 
-        ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'}, {'$set': {'status': value}}, upsert=True)
-
-        return await ctx.send(f'Status changed to {value}')
+        return await ctx.send(f'Status changed to {value}' if value != 'reset' else 'Status Reset.')
 
     @commands.command(name='authorize', description='Add user to authorized list.', hidden=True)
     @is_authorized()
     async def authorize_add(self, ctx, to_auth: discord.Member):
-        uid = ctx.author.id
+        uid = to_auth.id
         ctx.bot.mdb['authorized'].update_one({'_id': uid}, {'$set': {'_id': uid}}, upsert=True)
 
         return await ctx.send(f'User {ctx.author.display_name} added to authorized list.')
@@ -57,7 +58,7 @@ class Admin(commands.Cog):
         if db.find(record).count() == 0:
             db.insert_one(record)
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has been muted.')
-            self._update_muted()
+            self.bot.update_muted_from_db()
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has already been muted.')
 
@@ -69,15 +70,9 @@ class Admin(commands.Cog):
         if db.find(record).count() != 0:
             db.delete_one(record)
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has been unmuted.')
-            self._update_muted()
+            self.bot.update_muted_from_db()
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} is not muted.')
-
-    def _update_muted(self):
-        muted = []
-        for muted_user in self.bot.mdb['muted_clients'].find({}):
-            muted.append(muted_user['_id'])
-        self.bot.muted = muted
 
 
 def setup(bot):

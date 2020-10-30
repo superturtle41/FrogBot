@@ -42,6 +42,21 @@ class FrogBot(commands.Bot):
     def prefix(self):
         return self._prefix
 
+    async def update_status_from_db(self):
+        current_status = self.mdb['bot_settings'].find_one({'setting': 'status'})
+        if current_status is None:
+            current_status = f'{config.DEFAULT_STATUS} | {config.PREFIX}help'
+        else:
+            current_status = f'{current_status["status"]} | {config.PREFIX}help'
+        activity = discord.Game(name=current_status)
+        await self.change_presence(activity=activity)
+
+    def update_muted_from_db(self):
+        muted = []
+        for muted_user in self.mdb['muted_clients'].find():
+            muted.append(muted_user['_id'])
+        self.muted = muted
+
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             return
@@ -86,18 +101,9 @@ log = logging.getLogger('bot')
 
 @bot.event
 async def on_ready():
-    muted = []
-    for muted_user in bot.mdb['muted_clients'].find({}):
-        muted.append(muted_user['_id'])
-    bot.muted = muted
 
-    current_status = bot.mdb['bot_settings'].find_one({'setting': 'status'})
-    if current_status is None:
-        current_status = f'{config.DEFAULT_STATUS} | {config.PREFIX}help'
-    else:
-        current_status = f'{current_status["status"]} | {config.PREFIX}help'
-    activity = discord.Game(name=current_status)
-    await bot.change_presence(activity=activity)
+    await bot.update_muted_from_db()
+    await bot.update_status_from_db()
 
     ready_message = f'\n---------------------------------------------------\n' \
                     f'Bot Ready!\n' \
