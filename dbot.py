@@ -25,7 +25,7 @@ class FrogBot(commands.Bot):
         self.launch_time = datetime.datetime.now()
         self._dev_id = config.DEV_ID
         self.mongo_client = MongoClient(config.MONGO_URL)
-        self.mdb = self.mongo_client['frogbotdb']
+        self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = []
 
     @property
