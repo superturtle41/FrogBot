@@ -94,6 +94,8 @@ async def on_ready():
     current_status = bot.mdb['bot_settings'].find_one({'setting': 'status'})
     if current_status is None:
         current_status = f'{config.DEFAULT_STATUS} | {config.PREFIX}help'
+    else:
+        current_status = f'{current_status["status"]} | {config.PREFIX}help'
     activity = discord.Game(name=current_status)
     await bot.change_presence(activity=activity)
 
@@ -128,4 +130,5 @@ for cog in COGS:
     bot.load_extension(cog)
 
 if __name__ == '__main__':
+    bot.mdb['authorized'].update_one({'_id': bot.owner}, {'$set': {'_id': bot.owner}}, upsert=True)
     bot.run(config.TOKEN)

@@ -23,9 +23,17 @@ class Admin(commands.Cog):
         activity = discord.Game(name=f'{value} | {ctx.bot.prefix}help')
         await ctx.bot.change_presence(activity=activity)
 
-        ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'}, {'$set': {'status': value}})
+        ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'}, {'$set': {'status': value}}, upsert=True)
 
         return await ctx.send(f'Status changed to {value}')
+
+    @commands.command(name='authorize', description='Add user to authorized list.', hidden=True)
+    @is_authorized()
+    async def authorize_add(self, ctx, to_auth: discord.Member):
+        uid = ctx.author.id
+        ctx.bot.mdb['authorized'].update_one({'_id': uid}, {'$set': {'_id': uid}}, upsert=True)
+
+        return await ctx.send(f'User {ctx.author.display_name} added to authorized list.')
 
     @commands.command(name='ban', description='Bans a user from the server.')
     @is_owner()
