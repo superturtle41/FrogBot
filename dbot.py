@@ -24,6 +24,7 @@ class FrogBot(commands.Bot):
         super(FrogBot, self).__init__(command_prefix, description=desc, **options)
         self.launch_time = datetime.datetime.now()
         self._dev_id = config.DEV_ID
+        self._prefix = config.PREFIX
         self.mongo_client = MongoClient(config.MONGO_URL)
         self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = []
@@ -36,6 +37,10 @@ class FrogBot(commands.Bot):
     @property
     def owner(self):
         return self._dev_id
+
+    @property
+    def prefix(self):
+        return self._prefix
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
@@ -85,6 +90,12 @@ async def on_ready():
     for muted_user in bot.mdb['muted_clients'].find({}):
         muted.append(muted_user['_id'])
     bot.muted = muted
+
+    current_status = bot.mdb['bot_settings'].find_one({'setting': 'status'})
+    if current_status is None:
+        current_status = f'{config.DEFAULT_STATUS} | {config.PREFIX}help'
+    activity = discord.Game(name=current_status)
+    await bot.change_presence(activity=activity)
 
     ready_message = f'\n---------------------------------------------------\n' \
                     f'Bot Ready!\n' \
