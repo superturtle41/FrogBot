@@ -5,6 +5,9 @@ from .dm_constants import *
 class InvalidArgument(Exception):
     pass
 
+class CategoryExists(Exception):
+    pass
+
 
 class DMCategory:
     def __init__(self, owner: Member, category: CategoryChannel, guild: Guild, channels: list):
@@ -42,6 +45,35 @@ class DMCategory:
             'guild_id': self.guild.id,
             'channels': [x.to_dict() for x in self.channels]
         }
+
+    @classmethod
+    def new(cls, bot, guild, owner):
+        # Check to make sure User does not already have a DM Category
+        db = bot.mdb['dmcategories']
+        exists = db.find_one({'owner_id': owner.id, 'guild_id': guild.id})
+        if exists is not None:
+            raise CategoryExists('User has an existing category in this server.')
+        # Create Default Permissions
+        base_perms = {
+            guild.me: CHANNEL_ADMIN,
+            owner: CHANNEL_ADMIN,
+            guild.default_role: CHANNEL_HIDDEN
+        }
+        # Create Category
+        new_category = await guild.create_category(name=f'{owner.display_name}\'s category', overwrites=base_perms)
+        new_channel = await guild.create_text_channel(name=f'dm-hub-{owner.display_name}', category=new_category)
+        category = DMCategory(owner=owner, category=new_category, guild=guild, channels=[])
+        category.channels = [DMChannel(category=category, permissions=[], channel=new_channel)]
+        db.insert_one(category.to_dict())
+        return category
+
+    def delete(self, bot):
+        bot.mdb['dmcategories'].delete_one({'category_id': self.category.id})
+
+        for channel in self.channels:
+            channel.delete()
+
+        self.category.delete()
 
     @property
     def guild(self):
@@ -82,6 +114,12 @@ class DMChannel:
 
     def to_dict(self):
         return {'channel_id': self.channel.id, 'permissions': [p.to_dict() for p in self.permissions]}
+
+    def delete(self):
+        try:
+            self.channel.delete()
+        except discord.HTTPException:
+            pass
 
     @property
     def category(self):
@@ -151,8 +189,5 @@ class DMPermissions:
     def guild(self):
         return self._guild
 
-    def apply_to(self, channel):
-        if self.object_type == 'Everyone':
-            await channel.set_permissions(self.guild.default_role, overwrite=self.permission)
-        else:
-            await channel.set_permissions(self.applies_to, overwrite=self.permissions)
+    def apply_permission(self, channel):
+        await channel.set_permissions(self.applies_to, overwrite=self.permissions)
