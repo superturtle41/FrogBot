@@ -73,9 +73,13 @@ class FrogBot(commands.Bot):
             msg = str(error) or "Missing Unknown Required Argument"
             return await ctx.send(f"Error: {msg}")
 
+        if ctx.command.name == 'eval':
+            msg = str(error) or "Error occurred in eval."
+            return await ctx.send(f"Error: {msg}")
+
         error_message = f'An unhandled error has occurred!\n' \
                         f'Please contact the Bot Developer with this message!\n' \
-                        f'(Right Click -> Copy Message ID)' \
+                        f'(Right Click -> Copy Message ID)\n' \
                         f'{str(error)}\n'
 
         await ctx.send(error_message)

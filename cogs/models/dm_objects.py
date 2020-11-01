@@ -5,6 +5,7 @@ from .dm_constants import *
 class InvalidArgument(Exception):
     pass
 
+
 class CategoryExists(Exception):
     pass
 
@@ -18,9 +19,9 @@ class DMCategory:
 
     @classmethod
     def from_dict(cls, bot, data):
-        if not isinstance(data['guild'], int):
+        if not isinstance(data['guild_id'], int):
             raise InvalidArgument('Guild ID must be an Int.')
-        guild = bot.get_guild(data['guild'])
+        guild = bot.get_guild(data['guild_id'])
         if guild is None:
             raise InvalidArgument('Guild must exist.')
         if not isinstance(data['owner_id'], int):
@@ -47,7 +48,7 @@ class DMCategory:
         }
 
     @classmethod
-    def new(cls, bot, guild, owner):
+    async def new(cls, bot, guild, owner):
         # Check to make sure User does not already have a DM Category
         db = bot.mdb['dmcategories']
         exists = db.find_one({'owner_id': owner.id, 'guild_id': guild.id})
@@ -67,13 +68,18 @@ class DMCategory:
         db.insert_one(category.to_dict())
         return category
 
-    def delete(self, bot):
-        bot.mdb['dmcategories'].delete_one({'category_id': self.category.id})
+    async def delete(self, bot):
+        to_delete_id = self.category.id
 
         for channel in self.channels:
-            channel.delete()
+            await channel.delete()
 
-        self.category.delete()
+        try:
+            await self.category.delete()
+        except (discord.HTTPException, discord.NotFound):
+            pass
+
+        bot.mdb['dmcategories'].delete_one({'category_id': to_delete_id})
 
     @property
     def guild(self):
@@ -95,6 +101,9 @@ class DMCategory:
     def channels(self, new_channels):
         self._channels = new_channels
 
+    def __str__(self):
+        return f"{self.category.name} | {len(self.channels)} channel(s) | {self.category.guild.name}"
+
 
 class DMChannel:
     def __init__(self, category: DMCategory, permissions: list, channel: discord.TextChannel):
@@ -115,10 +124,10 @@ class DMChannel:
     def to_dict(self):
         return {'channel_id': self.channel.id, 'permissions': [p.to_dict() for p in self.permissions]}
 
-    def delete(self):
+    async def delete(self):
         try:
-            self.channel.delete()
-        except discord.HTTPException:
+            await self.channel.delete()
+        except (discord.HTTPException, discord.NotFound):
             pass
 
     @property
@@ -189,5 +198,5 @@ class DMPermissions:
     def guild(self):
         return self._guild
 
-    def apply_permission(self, channel):
+    async def apply_permission(self, channel):
         await channel.set_permissions(self.applies_to, overwrite=self.permissions)
