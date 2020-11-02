@@ -151,7 +151,6 @@ class DMCommands(commands.Cog):
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
 
-
     # Users
 
     @dm.command(name='adduser', description='Adds a user to a channel with read/write')
