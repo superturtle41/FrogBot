@@ -85,7 +85,7 @@ class REPL(commands.Cog):
         exec(compile(parsed, filename="<ast>", mode="exec"), env)
 
         result = (await eval(f"{fn_name}()", env))
-        result_embed = create_default_embed(ctx.bot, ctx)
+        result_embed = create_default_embed(ctx)
         result_embed.title = f'Eval Result'
         if not result:
             result = 'Nothing returned.'

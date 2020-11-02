@@ -39,7 +39,7 @@ class QuestRoles(commands.Cog):
             else:
                 return False
 
-        embed = create_default_embed(self.bot, ctx)
+        embed = create_default_embed(ctx)
         embed.title = 'Quest Role Creation'
         question_msg = await ctx.send(embed=embed)
         role_name = await next_question(embed, question_msg, f'{ctx.author.mention}, '

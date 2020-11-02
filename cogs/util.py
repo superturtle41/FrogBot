@@ -1,6 +1,7 @@
 from discord.ext import commands
 from utils.checks import is_owner, is_authorized
 import discord
+from utils.functions import create_default_embed
 from datetime import datetime
 
 
@@ -22,7 +23,7 @@ class Utility(commands.Cog):
         await message.edit(content=f'Pong!\nBot: {int(ctx.bot.latency*1000)} ms\n'
                                    f'Discord: {int((datetime.now() - now).total_seconds()*1000)} ms')
 
-    @commands.command(name='uptime', description='Displays the uptime of the bot.', aliases=['up', 'info'])
+    @commands.command(name='uptime', description='Displays the uptime of the bot.', aliases=['up', 'alive'])
     async def uptime(self, ctx):
         bot_up = time_to_readable(self.bot.uptime)
         if ctx.bot.is_ready():
@@ -31,8 +32,15 @@ class Utility(commands.Cog):
             ready_up = None
         out = f'Current Bot Uptime: {bot_up}'
         if ready_up:
-            out += '\n'+f'Current Ready Uptime{ready_up}'
+            out += '\n'+f'Current Ready Uptime: {ready_up}'
         return await ctx.send(out)
+
+    @commands.command(name='info', description='Info about the bot.', aliases='stats')
+    async def bot_info(self, ctx):
+        embed = create_default_embed(ctx)
+        embed.title = 'FrogBot Information'
+        embed.description = 'Bot built by Dr Turtle#1771 made for D&D and personal servers!'
+
 
 
 def setup(bot):
