@@ -41,6 +41,8 @@ class Utility(commands.Cog):
         embed.title = 'FrogBot Information'
         embed.description = 'Bot built by Dr Turtle#1771 made for D&D and personal servers!'
 
+        await ctx.send(embed=embed)
+
 
 
 def setup(bot):
