@@ -3,6 +3,7 @@ import ast
 import discord
 from discord.ext import commands
 from utils import checks
+from utils.functions import create_default_embed
 
 
 def insert_returns(body):
@@ -84,9 +85,12 @@ class REPL(commands.Cog):
         exec(compile(parsed, filename="<ast>", mode="exec"), env)
 
         result = (await eval(f"{fn_name}()", env))
-        if result == '':
+        result_embed = create_default_embed(ctx.bot, ctx)
+        result_embed.title = f'Eval Result'
+        if not result:
             result = 'Nothing returned.'
-        await ctx.send(result)
+        result_embed.description = f'```py\n{result}```'
+        await ctx.send(embed=result_embed)
 
 
 def setup(bot):
