@@ -83,6 +83,8 @@ class DMCommands(commands.Cog):
             embed.description = f'Updated {new_channels} new channel(s) and synced all permissions.'
         await ctx.send(embed=embed)
 
+    # Roles
+
     @dm.command(name='addrole', description='Adds a role to a channel with read/write.')
     async def dm_add_role(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Role, type_: int = 1):
         current_cat, embed, test = await get_category_and_embed(ctx)
@@ -117,6 +119,47 @@ class DMCommands(commands.Cog):
                 embed.description = f'There is no existing permission for {to_add.name} in {channel_to_change.name}.'
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
+
+    @dm.command(name='adduser', description='Adds a user to a channel with read/write')
+    async def dm_add_user(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Member, type_: int = 1):
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
+            if not channel:
+                return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
+            channel: DMChannel = channel[0]
+            new_perms = DMPermissions(type_=1, perm_type=type_, obj=to_add, guild=ctx.guild)
+            await channel.add_permission(new_perms)
+            current_cat.commit(self.bot)
+            embed.title = f'{ctx.author.display_name} adds {to_add.display_name} to #{channel.channel.name}'
+            type_ = ['Admin', 'Read/Send', 'Read-Only', 'Hidden'][type_]
+            embed.description = f'{to_add.display_name} has been added to ' \
+                                f'#{channel.channel.name} with {type_} permissions'
+        return await ctx.send(embed=embed)
+
+    @dm.command(name='removeuser', description='Removes a user from a channel')
+    async def dm_remove_user(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Member):
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
+            if not channel:
+                return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
+            channel: DMChannel = channel[0]
+            result = await channel.remove_perm_for(to_remove)
+            current_cat.commit(self.bot)
+            if result:
+                embed.title = f'{ctx.author.display_name} removes ' \
+                              f'{to_remove.display_name} from #{channel_to_change.name}!'
+                embed.description = f'{to_remove.display_name} has been removed from #{channel_to_change.name}.'
+            else:
+                embed.title = f'{ctx.author.display_name} tries to remove ' \
+                              f'{to_remove.display_name} from #{channel_to_change.name}!'
+                embed.description = f'There is no existing permission for ' \
+                                    f'{to_remove.display_name} in #{channel_to_change.name}.'
+            await channel.sync_permissions()
+        return await ctx.send(embed=embed)
+
+    # Util Commands
 
     @dm.command(name='port_old_channels', hidden=True)
     async def dm_port_old(self, ctx, old_category: discord.CategoryChannel, hub_channel: discord.TextChannel,
