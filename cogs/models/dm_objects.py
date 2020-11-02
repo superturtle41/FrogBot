@@ -278,5 +278,9 @@ class DMPermissions:
     def guild(self):
         return self._guild
 
+    @property
+    def perm_type(self):
+        return ['Admin', 'Read/Send', 'Read-Only', 'Hidden'][self._perm_type]
+
     async def apply_permission(self, channel):
         await channel.set_permissions(self.applies_to, overwrite=self.permissions)

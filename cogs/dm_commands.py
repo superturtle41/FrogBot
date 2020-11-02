@@ -2,6 +2,7 @@ import asyncio
 
 import discord
 from discord.ext import commands
+import typing
 
 from utils.checks import is_owner
 from utils.functions import create_default_embed, get_positivity, try_delete
@@ -97,28 +98,75 @@ class DMCommands(commands.Cog):
             await channel.add_permission(new_perms)
             current_cat.commit(self.bot)
             embed.title = f'{ctx.author.display_name} adds {to_add.name} to #{channel.channel.name}'
-            type_ = ['Admin', 'Read/Send', 'Read-Only', 'Hidden'][type_]
-            embed.description = f'{to_add.name} has been added to #{channel.channel.name} with {type_} permissions'
+            embed.description = f'{to_add.name} has been added to #{channel.channel.name}' \
+                                f' with {new_perms.perm_type} permissions'
         return await ctx.send(embed=embed)
 
-    @dm.command(name='removerole', description='Removes a roll from a channel.')
-    async def dm_remove_roll(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Role):
+    @dm.command(name='addrole-all', description='Adds a role to all of your DM channels.')
+    async def dm_add_role_all(self, ctx, to_add: discord.Role, type_: typing.Optional[int] = 1,
+                              ignore: discord.TextChannel = None):
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            embed.title = f'{ctx.author.display_name} adds {to_add.name} to all DM channels.'
+            for channel in current_cat.channels:
+                if ignore is not None:
+                    if channel.channel.id == ignore.id:
+                        embed.add_field(name=channel.channel.name, value='Ignored.')
+                        continue
+                new_perms = DMPermissions(type_=0, perm_type=type_, obj=to_add, guild=ctx.guild)
+                await channel.add_permission(new_perms)
+                current_cat.commit(self.bot)
+                embed.add_field(name=channel.channel.name, value=f'Added @{to_add.name} with {new_perms.perm_type}')
+        return await ctx.send(embed=embed)
+
+    @dm.command(name='removerole', description='Removes a role from a channel.')
+    async def dm_remove_role(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Role):
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
             if not channel:
                 return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
             channel: DMChannel = channel[0]
-            result = await channel.remove_perm_for(to_add)
+            result = await channel.remove_perm_for(to_remove)
             current_cat.commit(self.bot)
             if result:
-                embed.title = f'{ctx.author.display_name} removes {to_add.name} from {channel_to_change.name}!'
-                embed.description = f'{to_add.name} has been removed from {channel_to_change.name}.'
+                embed.title = f'{ctx.author.display_name} removes {to_remove.name} from {channel_to_change.name}!'
+                embed.description = f'{to_remove.name} has been removed from {channel_to_change.name}.'
             else:
-                embed.title = f'{ctx.author.display_name} tries to remove {to_add.name} from {channel_to_change.name}!'
-                embed.description = f'There is no existing permission for {to_add.name} in {channel_to_change.name}.'
+                embed.title = f'{ctx.author.display_name} tries to remove {to_remove.name} from {channel_to_change.name}!'
+                embed.description = f'There is no existing permission for {to_remove.name} in {channel_to_change.name}.'
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
+
+    @dm.command(name='removerole-all', description='Removes a roll from all channels.')
+    async def dm_remove_role_all(self, ctx, to_remove: discord.Role):
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            embed.title = f'{ctx.author.display_name} removes {to_remove.name} from all DM channels!'
+            for channel in current_cat.channels:
+                result = await channel.remove_perm_for(to_remove)
+                if result:
+                    embed.add_field(name=channel.channel.name, value=f'Removed Permissions for {to_remove.name}')
+            current_cat.commit(self.bot)
+            await channel.sync_permissions()
+        return await ctx.send(embed=embed)
+
+    @dm.command(name='list', description='List permissions for a certain channel.')
+    async def dm_list_roles(self, ctx, channel: discord.TextChannel = None):
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            if channel is None:
+                channel = ctx.channel
+            channel = next((dmc for dmc in current_cat.channels if dmc.channel.id == channel.id), None)
+            if channel is None:
+                return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
+            embed.title = f'List of special permissions for {channel.channel.name}'
+            for permission in channel.permissions:
+                embed.add_field(name=f'{permission.object_type}: {permission.applies_to.name}',
+                                value=permission.perm_type)
+        await ctx.send(embed=embed)
+
+    # Users
 
     @dm.command(name='adduser', description='Adds a user to a channel with read/write')
     async def dm_add_user(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Member, type_: int = 1):
@@ -132,9 +180,8 @@ class DMCommands(commands.Cog):
             await channel.add_permission(new_perms)
             current_cat.commit(self.bot)
             embed.title = f'{ctx.author.display_name} adds {to_add.display_name} to #{channel.channel.name}'
-            type_ = ['Admin', 'Read/Send', 'Read-Only', 'Hidden'][type_]
             embed.description = f'{to_add.display_name} has been added to ' \
-                                f'#{channel.channel.name} with {type_} permissions'
+                                f'#{channel.channel.name} with {new_perms.perm_type} permissions'
         return await ctx.send(embed=embed)
 
     @dm.command(name='removeuser', description='Removes a user from a channel')

@@ -67,6 +67,10 @@ class CommandErrorHandler(commands.Cog):
             msg = str(error) or "Missing Unknown Required Argument"
             return await ctx.send(f"Error: {msg}")
 
+        elif isinstance(error, commands.BadArgument):
+            msg = str(error) or "Unknown Bad Argument"
+            return await ctx.send(f'Error: {msg}')
+
         elif isinstance(error, commands.NoPrivateMessage):
             try:
                 await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
