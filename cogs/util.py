@@ -36,7 +36,7 @@ class Utility(commands.Cog):
         return await ctx.send(out)
 
     @commands.command(name='info', description='Info about the bot.', aliases=['stats'])
-    async def bot_info(self, ctx):
+    async def info(self, ctx):
         embed = create_default_embed(ctx)
         embed.title = 'FrogBot Information'
         embed.description = 'Bot built by Dr Turtle#1771 made for D&D and personal servers!'
