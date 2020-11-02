@@ -68,6 +68,15 @@ class DMCategory:
         db.insert_one(category.to_dict())
         return category
 
+    @classmethod
+    async def from_ctx(cls, ctx):
+        existing = ctx.bot.mdb['dmcategories'].find_one({'owner_id': ctx.author.id, 'guild_id': ctx.guild.id})
+        if existing is not None:
+            existing.pop('_id')
+            return await cls.from_dict(ctx.bot, existing)
+        else:
+            return None
+
     async def delete(self, bot):
         to_delete_id = self.category.id
 
@@ -89,6 +98,12 @@ class DMCategory:
                 continue
             new_channel = DMChannel(self, [], channel)
             self.channels.append(new_channel)
+
+    async def sync_permissions(self):
+        await self.update_channels()
+        for channel in self.channels:
+            await channel.sync_permissions()
+
 
     @property
     def guild(self):
@@ -138,6 +153,17 @@ class DMChannel:
             await self.channel.delete()
         except (discord.HTTPException, discord.NotFound):
             pass
+
+    async def sync_permissions(self):
+        base_perms = {
+            self.category.guild.me: CHANNEL_ADMIN,
+            self.category.owner: CHANNEL_ADMIN,
+            self.category.guild.default_role: CHANNEL_HIDDEN
+        }
+        for perm in self.permissions:
+            await perm.apply_permission(self.channel)
+        for perm in base_perms:
+            await self.channel.set_permissions(perm, overwrite=base_perms[perm])
 
     @property
     def category(self):

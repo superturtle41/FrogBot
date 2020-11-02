@@ -11,7 +11,7 @@ from utils.functions import try_delete
 
 COGS = (
     'cogs.util', 'cogs.eval', 'cogs.admin', 'cogs.error_handeling',
-    'cogs.quest_roles'
+    'cogs.quest_roles', 'cogs.dm_commands'
 )
 
 
