@@ -84,18 +84,18 @@ class DMCommands(commands.Cog):
         await ctx.send(embed=embed)
 
     @dm.command(name='addrole', description='Adds a role to a channel with read/write.')
-    async def dm_add_role(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Role, type: int = 1):
+    async def dm_add_role(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Role, type_: int = 1):
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
             if not channel:
                 return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
             channel: DMChannel = channel[0]
-            new_perms = DMPermissions(type_=0, perm_type=type, obj=to_add, guild=ctx.guild)
+            new_perms = DMPermissions(type_=0, perm_type=type_, obj=to_add, guild=ctx.guild)
             await channel.add_permission(new_perms)
             current_cat.commit(self.bot)
             embed.title = f'{ctx.author.display_name} adds {to_add.name} to #{channel.channel.name}'
-            type_ = ['Admin', 'Read/Send', 'Read-Only', 'Hidden'][type]
+            type_ = ['Admin', 'Read/Send', 'Read-Only', 'Hidden'][type_]
             embed.description = f'{to_add.name} has been added to #{channel.channel.name} with {type_} permissions'
         return await ctx.send(embed=embed)
 
