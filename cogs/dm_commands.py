@@ -95,7 +95,8 @@ class DMCommands(commands.Cog):
             await channel.add_permission(new_perms)
             current_cat.commit(self.bot)
             embed.title = f'{ctx.author.display_name} adds {to_add.name} to #{channel.channel.name}'
-            embed.description = f'{to_add.name} has been added to #{channel.channel.name} with Read/Send permissions'
+            type_ = ['Admin', 'Read/Send', 'Read-Only', 'Hidden'][type]
+            embed.description = f'{to_add.name} has been added to #{channel.channel.name} with {type_} permissions'
         return await ctx.send(embed=embed)
 
     @dm.command(name='removerole', description='Removes a roll from a channel.')
