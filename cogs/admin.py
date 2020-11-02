@@ -7,6 +7,7 @@ class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # ---- Bot Owner Commands ----
     @commands.command(name="stop", description="Owner Only - Stops Bot", hidden=True)
     @is_owner()
     async def stop(self, ctx, really: str = "no"):
@@ -29,7 +30,7 @@ class Admin(commands.Cog):
         return await ctx.send(f'Status changed to {value}' if value != 'reset' else 'Status Reset.')
 
     @commands.command(name='authorize', description='Add user to authorized list.', hidden=True)
-    @is_authorized()
+    @is_owner()
     async def authorize_add(self, ctx, to_auth: discord.Member):
         uid = to_auth.id
         ctx.bot.mdb['authorized'].update_one({'_id': uid}, {'$set': {'_id': uid}}, upsert=True)
@@ -49,6 +50,21 @@ class Admin(commands.Cog):
             return await ctx.author.dm_channel.send('I do not have permissions to ban this user.')
         except discord.HTTPException:
             return await ctx.author.dm_channel.send('An unknown discord error occurred. Pleas try again later.')
+
+    @commands.command(name='leave', description='Leave a Guild')
+    async def leave_guild(self, ctx, guild_id: int):
+        to_leave = await self.bot.get_guild(guild_id)
+        if to_leave is not None:
+            await ctx.send(f'Leaving Guild: `{to_leave.name}`')
+            try:
+                await self.bot.leave(to_leave)
+            except discord.HTTPException:
+                pass
+            return
+        else:
+            return await ctx.send('Guild not found.')
+
+    # ---- Authorized-Only Commands ----
 
     @commands.command(name='mute', description='Mutes a user. Prevents them from using the bot.', hidden=True)
     @is_authorized()
@@ -74,6 +90,8 @@ class Admin(commands.Cog):
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} is not muted.')
 
+    # ---- Server Owner Commands ----
+
     @commands.command(name='prefix', description='Changes the Bot\'s Prefix. Must have Manage Server.')
     @commands.has_guild_permissions(manage_guild=True)
     async def change_prefix(self, ctx, to_change: str = None):
@@ -95,7 +113,6 @@ class Admin(commands.Cog):
             ctx.bot.mdb['prefixes'].update_one({'guild_id': guild_id}, {'$set': {'prefix': to_change}}, upsert=True)
             ctx.bot.prefixes[guild_id] = to_change
             return await ctx.send(f'Guild prefix updated to `{to_change}`')
-
 
 def setup(bot):
     bot.add_cog(Admin(bot))

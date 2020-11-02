@@ -151,20 +151,6 @@ class DMCommands(commands.Cog):
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
 
-    @dm.command(name='list', description='List permissions for a certain channel.')
-    async def dm_list_roles(self, ctx, channel: discord.TextChannel = None):
-        current_cat, embed, test = await get_category_and_embed(ctx)
-        if test:
-            if channel is None:
-                channel = ctx.channel
-            channel = next((dmc for dmc in current_cat.channels if dmc.channel.id == channel.id), None)
-            if channel is None:
-                return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
-            embed.title = f'List of special permissions for {channel.channel.name}'
-            for permission in channel.permissions:
-                embed.add_field(name=f'{permission.object_type}: {permission.applies_to.name}',
-                                value=permission.perm_type)
-        await ctx.send(embed=embed)
 
     # Users
 
@@ -208,7 +194,23 @@ class DMCommands(commands.Cog):
 
     # Util Commands
 
+    @dm.command(name='list', description='List permissions for a certain channel.')
+    async def dm_list_perms(self, ctx, channel: discord.TextChannel = None):
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            if channel is None:
+                channel = ctx.channel
+            channel = next((dmc for dmc in current_cat.channels if dmc.channel.id == channel.id), None)
+            if channel is None:
+                return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
+            embed.title = f'List of special permissions for {channel.channel.name}'
+            for permission in channel.permissions:
+                embed.add_field(name=f'{permission.object_type}: {permission.applies_to.name}',
+                                value=permission.perm_type)
+        await ctx.send(embed=embed)
+
     @dm.command(name='port_old_channels', hidden=True)
+    @is_owner()
     async def dm_port_old(self, ctx, old_category: discord.CategoryChannel, hub_channel: discord.TextChannel,
                           owner: discord.Member):
         category: DMCategory = await DMCategory.new_from_old(self.bot, ctx.guild, owner, old_category, hub_channel)
