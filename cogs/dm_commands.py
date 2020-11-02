@@ -118,6 +118,12 @@ class DMCommands(commands.Cog):
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
 
+    @dm.command(name='port_old_channels', hidden=True)
+    async def dm_port_old(self, ctx, old_category: discord.CategoryChannel, hub_channel: discord.TextChannel,
+                          owner: discord.Member):
+        category: DMCategory = await DMCategory.new_from_old(self.bot, ctx.guild, owner, old_category, hub_channel)
+        return await ctx.send(str(category))
+
 
 def setup(bot):
     bot.add_cog(DMCommands(bot))

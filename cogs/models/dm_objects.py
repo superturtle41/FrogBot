@@ -70,6 +70,24 @@ class DMCategory:
         return category
 
     @classmethod
+    async def new_from_old(cls, bot, guild, owner, category, hub_channel):
+        db = bot.mdb['dmcategories']
+        # Create Default Permissions
+        base_perms = {
+            guild.me: CHANNEL_ADMIN,
+            owner: CHANNEL_ADMIN,
+            guild.default_role: CHANNEL_HIDDEN
+        }
+        # Create Category
+        new_category = category
+        new_channel = hub_channel
+        category = DMCategory(owner=owner, category=new_category, guild=guild, channels=[])
+        category.channels = [DMChannel(category=category, permissions=[], channel=new_channel)]
+        await category.sync_permissions(bot)
+        db.insert_one(category.to_dict())
+        return category
+
+    @classmethod
     async def from_ctx(cls, ctx):
         existing = ctx.bot.mdb['dmcategories'].find_one({'owner_id': ctx.author.id, 'guild_id': ctx.guild.id})
         if existing is not None:
