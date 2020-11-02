@@ -1,7 +1,6 @@
 import datetime as datetime
 import logging
 import sys
-import traceback
 
 import discord
 from discord.ext import commands
@@ -11,26 +10,40 @@ import bot_config as config
 from utils.functions import try_delete
 
 COGS = (
-    'cogs.util', 'cogs.eval', 'cogs.admin',
+    'cogs.util', 'cogs.eval', 'cogs.admin', 'cogs.error_handeling',
     'cogs.quest_roles'
 )
 
 
 def get_prefix(client, message):
-    prefix = [config.PREFIX]
-    return commands.when_mentioned_or(*prefix)(client, message)
+    if not message.guild:
+        return commands.when_mentioned_or(config.PREFIX)(client, message)
+    guild_id = str(message.guild.id)
+    if guild_id in client.prefixes:
+        prefix = client.prefixes.get(guild_id, config.PREFIX)
+    else:
+        dbsearch = client.mdb['prefixes'].find_one({'guild_id': guild_id})
+        if dbsearch is not None:
+            prefix = dbsearch.get('prefix', config.PREFIX)
+        else:
+            prefix = config.PREFIX
+        client.prefixes[guild_id] = prefix
+    return commands.when_mentioned_or(prefix)(client, message)
 
 
 class FrogBot(commands.Bot):
 
     def __init__(self, command_prefix=get_prefix, desc: str = '', **options):
-        super(FrogBot, self).__init__(command_prefix, description=desc, **options)
         self.launch_time = datetime.datetime.now()
         self._dev_id = config.DEV_ID
         self._prefix = config.PREFIX
         self.mongo_client = MongoClient(config.MONGO_URL)
         self.mdb = self.mongo_client[config.MONGO_DB]
-        self.muted = []
+        self.muted = set()
+        self.prefixes = dict()
+        super(FrogBot, self).__init__(command_prefix, description=desc,
+                                      activity=self.update_status_from_db(), **options)
+        self.update_muted_from_db()
 
     @property
     def uptime(self):
@@ -45,14 +58,14 @@ class FrogBot(commands.Bot):
     def prefix(self):
         return self._prefix
 
-    async def update_status_from_db(self):
+    def update_status_from_db(self):
         current_status = self.mdb['bot_settings'].find_one({'setting': 'status'})
         if current_status is None:
             current_status = f'{config.DEFAULT_STATUS} | {config.PREFIX}help'
         else:
             current_status = f'{current_status["status"]} | {config.PREFIX}help'
         activity = discord.Game(name=current_status)
-        await self.change_presence(activity=activity)
+        return activity
 
     def update_muted_from_db(self):
         muted = []
@@ -60,33 +73,6 @@ class FrogBot(commands.Bot):
             muted.append(muted_user['_id'])
         self.muted = muted
         return muted
-
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            return
-
-        elif isinstance(error, commands.CheckFailure):
-            msg = str(error) or "You are not allowed to run this command."
-            return await ctx.send(f"Error: {msg}")
-
-        elif isinstance(error, commands.MissingRequiredArgument):
-            msg = str(error) or "Missing Unknown Required Argument"
-            return await ctx.send(f"Error: {msg}")
-
-        if ctx.command.name == 'eval':
-            msg = str(error) or "Error occurred in eval."
-            return await ctx.send(f"Error: {msg}")
-
-        error_message = f'An unhandled error has occurred!\n' \
-                        f'Please contact the Bot Developer with this message!\n' \
-                        f'(Right Click -> Copy Message ID)\n' \
-                        f'{str(error)}\n'
-
-        await ctx.send(error_message)
-
-        log.warning("Error caused by message: `{}`".format(ctx.message.content))
-        for line in traceback.format_exception(type(error), error, error.__traceback__):
-            log.warning(line)
 
 
 intents = discord.Intents(
@@ -109,9 +95,6 @@ log = logging.getLogger('bot')
 
 @bot.event
 async def on_ready():
-
-    bot.update_muted_from_db()
-    await bot.update_status_from_db()
 
     ready_message = f'\n---------------------------------------------------\n' \
                     f'Bot Ready!\n' \
@@ -139,6 +122,7 @@ async def on_command(ctx):
         return
 
     await try_delete(ctx.message)
+
 
 for cog in COGS:
     bot.load_extension(cog)

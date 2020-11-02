@@ -24,7 +24,7 @@ class Admin(commands.Cog):
             ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'}, {'$set': {'status': value}}, upsert=True)
         else:
             ctx.bot.mdb['bot_settings'].delete_one({'setting': 'status'})
-        await ctx.bot.update_status_from_db()
+        await ctx.bot.change_presence(activity=ctx.bot.update_status_from_db())
 
         return await ctx.send(f'Status changed to {value}' if value != 'reset' else 'Status Reset.')
 
@@ -73,6 +73,25 @@ class Admin(commands.Cog):
             self.bot.update_muted_from_db()
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} is not muted.')
+
+    @commands.command(name='prefix', description='Changes the Bot\'s Prefix. Must have Manage Server.')
+    @commands.has_guild_permissions(manage_guild=True)
+    async def change_prefix(self, ctx, to_change: str = None):
+        guild_id = str(ctx.guild.id)
+        if to_change is None:
+            if guild_id in ctx.bot.prefixes:
+                prefix = ctx.bot.prefixes.get('prefix', ctx.bot.prefix)
+            elif (db_result := ctx.bot.mdb['prefixes'].find_one({'guild_id': guild_id})) is not None:
+                prefix = db_result.get('prefix', ctx.bot.prefix)
+            else:
+                prefix = ctx.bot.prefix
+            await ctx.send(f'No prefix specified to change. Your current prefix is `{prefix}`.')
+        else:
+            if ' ' in to_change:
+                return await ctx.send('The new prefix must not contain spaces.')
+            ctx.bot.mdb['prefixes'].update_one({'guild_id': guild_id}, {'$set': {'prefix': to_change}}, upsert=True)
+            ctx.bot.prefixes[guild_id] = to_change
+            return await ctx.send(f'Guild prefix updated to `{to_change}`')
 
 
 def setup(bot):

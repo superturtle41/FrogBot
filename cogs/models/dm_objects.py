@@ -81,6 +81,15 @@ class DMCategory:
 
         bot.mdb['dmcategories'].delete_one({'category_id': to_delete_id})
 
+    async def update_channels(self):
+        existings = [c.channel.id for c in self.channels]
+        # Add new channels
+        for channel in self.category.channels:
+            if channel.id in existings:
+                continue
+            new_channel = DMChannel(self, [], channel)
+            self.channels.append(new_channel)
+
     @property
     def guild(self):
         return self._guild
