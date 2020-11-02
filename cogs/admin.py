@@ -79,13 +79,16 @@ class Admin(commands.Cog):
     async def change_prefix(self, ctx, to_change: str = None):
         guild_id = str(ctx.guild.id)
         if to_change is None:
-            if guild_id in ctx.bot.prefixes:
-                prefix = ctx.bot.prefixes.get('prefix', ctx.bot.prefix)
-            elif (db_result := ctx.bot.mdb['prefixes'].find_one({'guild_id': guild_id})) is not None:
-                prefix = db_result.get('prefix', ctx.bot.prefix)
+            if guild_id in self.bot.prefixes:
+                prefix = self.bot.prefixes.get(guild_id, self.bot.prefix)
             else:
-                prefix = ctx.bot.prefix
-            await ctx.send(f'No prefix specified to change. Your current prefix is `{prefix}`.')
+                dbsearch = self.bot.mdb['prefixes'].find_one({'guild_id': guild_id})
+                if dbsearch is not None:
+                    prefix = dbsearch.get('prefix', self.bot.prefix)
+                else:
+                    prefix = self.bot.prefix
+                self.bot.prefixes[guild_id] = prefix
+            return await ctx.send(f'No prefix specificed to Change. Current Prefix: `{prefix}`')
         else:
             if ' ' in to_change:
                 return await ctx.send('The new prefix must not contain spaces.')
