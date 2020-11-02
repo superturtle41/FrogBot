@@ -36,6 +36,7 @@ class DMCategory:
             raise InvalidArgument('Category must exist.')
         this = cls(owner, category, guild, channels=[])
         channels = [DMChannel.from_dict(this, x) for x in data['channels']]
+        channels = [channel for channel in channels if channel is not None]
         this.channels = channels
         return this
 
@@ -73,9 +74,13 @@ class DMCategory:
         existing = ctx.bot.mdb['dmcategories'].find_one({'owner_id': ctx.author.id, 'guild_id': ctx.guild.id})
         if existing is not None:
             existing.pop('_id')
-            return await cls.from_dict(ctx.bot, existing)
+            return cls.from_dict(ctx.bot, existing)
         else:
             return None
+
+    def commit(self, bot):
+        bot.mdb['dmcategories'].update_one({'owner_id': self.owner.id, 'guild_id': self.guild.id},
+                                           {'$set': self.to_dict()}, upsert=True)
 
     async def delete(self, bot):
         to_delete_id = self.category.id
@@ -92,18 +97,21 @@ class DMCategory:
 
     async def update_channels(self):
         existings = [c.channel.id for c in self.channels]
+        new = []
         # Add new channels
         for channel in self.category.channels:
             if channel.id in existings:
                 continue
             new_channel = DMChannel(self, [], channel)
-            self.channels.append(new_channel)
+            self.channels.append(new_channel), new.append(new_channel)
+        return new
 
-    async def sync_permissions(self):
-        await self.update_channels()
+    async def sync_permissions(self, bot):
+        new = await self.update_channels()
         for channel in self.channels:
             await channel.sync_permissions()
-
+        self.commit(bot)
+        return new
 
     @property
     def guild(self):
@@ -132,7 +140,7 @@ class DMCategory:
 class DMChannel:
     def __init__(self, category: DMCategory, permissions: list, channel: discord.TextChannel):
         self._category = category
-        self._permissions = permissions
+        self.permissions = permissions
         self._channel = channel
 
     @classmethod
@@ -141,7 +149,7 @@ class DMChannel:
             raise InvalidArgument('Channel ID must be an int.')
         channel = category.guild.get_channel(data['channel_id'])
         if channel is None:
-            raise InvalidArgument('Channel must exist.')
+            return None
         permissions = [DMPermissions.from_dict(category.guild, x) for x in data['permissions']]
         return cls(category, permissions, channel)
 
@@ -160,10 +168,33 @@ class DMChannel:
             self.category.owner: CHANNEL_ADMIN,
             self.category.guild.default_role: CHANNEL_HIDDEN
         }
+        await self.channel.edit(sync_permissions=True)
         for perm in self.permissions:
             await perm.apply_permission(self.channel)
         for perm in base_perms:
             await self.channel.set_permissions(perm, overwrite=base_perms[perm])
+
+    async def add_permission(self, perm_to_add):
+        intersect = [perm for perm in self.permissions if perm.applies_to.id == perm_to_add.applies_to.id]
+        if intersect:
+            intersect = intersect[0]
+            to_replace = self.permissions.index(intersect)
+            self.permissions[to_replace] = perm_to_add
+        else:
+            self.permissions.append(perm_to_add)
+        await self.sync_permissions()
+
+    async def remove_perm_for(self, obj):
+        intersect = [perm for perm in self.permissions if perm.applies_to.id == obj.id]
+        if intersect:
+            intersect = intersect[0]
+            to_remove = self.permissions.index(intersect)
+            self.permissions.pop(to_remove)
+            return True
+        else:
+            return None
+        await self.sync_permissions()
+
 
     @property
     def category(self):
@@ -172,10 +203,6 @@ class DMChannel:
     @property
     def guild(self):
         return self.category.guild
-
-    @property
-    def permissions(self):
-        return self._permissions
 
     @property
     def channel(self):
@@ -213,7 +240,7 @@ class DMPermissions:
     def to_dict(self):
         return {
             'type': self._type,
-            'perm_type': self.object_type,
+            'perm_type': self._perm_type,
             'obj_id': self.applies_to.id
         }
 

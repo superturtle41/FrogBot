@@ -69,7 +69,7 @@ class Admin(commands.Cog):
         db = self.bot.mdb['muted_clients']
         if db.find(record).count() != 0:
             db.delete_one(record)
-            return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has been unmuted.')
+            return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has been un-muted.')
             self.bot.update_muted_from_db()
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} is not muted.')
@@ -88,7 +88,7 @@ class Admin(commands.Cog):
                 else:
                     prefix = self.bot.prefix
                 self.bot.prefixes[guild_id] = prefix
-            return await ctx.send(f'No prefix specificed to Change. Current Prefix: `{prefix}`')
+            return await ctx.send(f'No prefix specified to Change. Current Prefix: `{prefix}`')
         else:
             if ' ' in to_change:
                 return await ctx.send('The new prefix must not contain spaces.')
