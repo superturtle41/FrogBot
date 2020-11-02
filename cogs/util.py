@@ -40,6 +40,7 @@ class Utility(commands.Cog):
         embed = create_default_embed(ctx)
         embed.title = 'FrogBot Information'
         embed.description = 'Bot built by Dr Turtle#1771 made for D&D and personal servers!'
+        embed.url = 'https://github.com/1drturtle/FrogBot'
 
         await ctx.send(embed=embed)
 
