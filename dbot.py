@@ -34,7 +34,7 @@ def get_prefix(client, message):
 class FrogBot(commands.Bot):
 
     def __init__(self, command_prefix=get_prefix, desc: str = '', **options):
-        self.launch_time = datetime.datetime.now()
+        self.launch_time = datetime.datetime.utcnow()
         self._dev_id = config.DEV_ID
         self._prefix = config.PREFIX
         self.mongo_client = MongoClient(config.MONGO_URL)
@@ -48,7 +48,7 @@ class FrogBot(commands.Bot):
     @property
     def uptime(self):
         """Returns the current uptime of the bot"""
-        return datetime.datetime.now() - self.launch_time
+        return datetime.datetime.utcnow() - self.launch_time
 
     @property
     def owner(self):
@@ -95,6 +95,8 @@ log = logging.getLogger('bot')
 
 @bot.event
 async def on_ready():
+
+    bot.ready_time = datetime.datetime.utcnow()
 
     ready_message = f'\n---------------------------------------------------\n' \
                     f'Bot Ready!\n' \

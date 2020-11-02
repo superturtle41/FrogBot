@@ -4,6 +4,13 @@ import discord
 from datetime import datetime
 
 
+def time_to_readable(delta_uptime):
+    hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    days, hours = divmod(hours, 24)
+    return f"{days}d, {hours}h, {minutes}m, {seconds}s"
+
+
 class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -17,7 +24,15 @@ class Utility(commands.Cog):
 
     @commands.command(name='uptime', description='Displays the uptime of the bot.', aliases=['up', 'info'])
     async def uptime(self, ctx):
-        return await ctx.send(f'The bot has been alive for: {str(self.bot.uptime).split(".", 2)[0]}')
+        bot_up = time_to_readable(self.bot.uptime)
+        if ctx.bot.is_ready():
+            ready_up = time_to_readable(datetime.utcnow() - self.bot.ready_time)
+        else:
+            ready_up = None
+        out = f'Current Bot Uptime: {bot_up}'
+        if ready_up:
+            out += '\n'+f'Current Ready Uptime{ready_up}'
+        return await ctx.send(out)
 
 
 def setup(bot):
