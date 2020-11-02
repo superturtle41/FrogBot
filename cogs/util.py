@@ -35,7 +35,7 @@ class Utility(commands.Cog):
             out += '\n'+f'Current Ready Uptime: {ready_up}'
         return await ctx.send(out)
 
-    @commands.command(name='info', description='Info about the bot.', aliases='stats')
+    @commands.command(name='info', description='Info about the bot.', aliases=['stats'])
     async def bot_info(self, ctx):
         embed = create_default_embed(ctx)
         embed.title = 'FrogBot Information'
