@@ -1,4 +1,4 @@
-    from discord.ext import commands
+from discord.ext import commands
 from utils.checks import is_owner, is_authorized
 import discord
 
