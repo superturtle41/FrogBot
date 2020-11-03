@@ -114,5 +114,6 @@ class Admin(commands.Cog):
             ctx.bot.prefixes[guild_id] = to_change
             return await ctx.send(f'Guild prefix updated to `{to_change}`')
 
+
 def setup(bot):
     bot.add_cog(Admin(bot))
