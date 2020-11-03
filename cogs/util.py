@@ -44,6 +44,13 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name='say', description='Repeats what you say.')
+    async def say(self, ctx, *, repeat: str):
+        out = repeat
+        if ctx.author.id != self.bot.owner:
+            out.prepend(f'{ctx.author.display_name}: ')
+        return await ctx.send(out)
+
 
 def setup(bot):
     bot.add_cog(Utility(bot))
