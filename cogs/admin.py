@@ -1,4 +1,4 @@
-from discord.ext import commands
+    from discord.ext import commands
 from utils.checks import is_owner, is_authorized
 import discord
 
@@ -93,7 +93,7 @@ class Admin(commands.Cog):
     # ---- Server Owner Commands ----
 
     @commands.command(name='prefix', description='Changes the Bot\'s Prefix. Must have Manage Server.')
-    @commands.has_guild_permissions(manage_guild=True)
+    @commands.check_any(commands.has_guild_permissions(manage_guild=True), is_owner())
     async def change_prefix(self, ctx, to_change: str = None):
         guild_id = str(ctx.guild.id)
         if to_change is None:
