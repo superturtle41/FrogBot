@@ -86,7 +86,7 @@ class DMCommands(commands.Cog):
 
     # Roles
 
-    @dm.command(name='addrole', description='Adds a role to a channel with read/write.')
+    @dm.command(name='addrole', description='Adds a role to a channel with read/write.', aliases=['ar'])
     async def dm_add_role(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Role, type_: int = 1):
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
@@ -102,7 +102,7 @@ class DMCommands(commands.Cog):
                                 f' with {new_perms.perm_type} permissions'
         return await ctx.send(embed=embed)
 
-    @dm.command(name='addrole-all', description='Adds a role to all of your DM channels.')
+    @dm.command(name='addrole-all', description='Adds a role to all of your DM channels.', aliases=['ara'])
     async def dm_add_role_all(self, ctx, to_add: discord.Role, type_: typing.Optional[int] = 1,
                               ignore: discord.TextChannel = None):
         current_cat, embed, test = await get_category_and_embed(ctx)
@@ -119,7 +119,7 @@ class DMCommands(commands.Cog):
                 embed.add_field(name=channel.channel.name, value=f'Added @{to_add.name} with {new_perms.perm_type}')
         return await ctx.send(embed=embed)
 
-    @dm.command(name='removerole', description='Removes a role from a channel.')
+    @dm.command(name='removerole', description='Removes a role from a channel.', aliases=['rr'])
     async def dm_remove_role(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Role):
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
@@ -138,7 +138,7 @@ class DMCommands(commands.Cog):
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
 
-    @dm.command(name='removerole-all', description='Removes a roll from all channels.')
+    @dm.command(name='removerole-all', description='Removes a roll from all channels.', aliases=['rra'])
     async def dm_remove_role_all(self, ctx, to_remove: discord.Role):
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
@@ -153,7 +153,7 @@ class DMCommands(commands.Cog):
 
     # Users
 
-    @dm.command(name='adduser', description='Adds a user to a channel with read/write')
+    @dm.command(name='adduser', description='Adds a user to a channel with read/write', aliases=['au'])
     async def dm_add_user(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Member, type_: int = 1):
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
@@ -169,7 +169,7 @@ class DMCommands(commands.Cog):
                                 f'#{channel.channel.name} with {new_perms.perm_type} permissions'
         return await ctx.send(embed=embed)
 
-    @dm.command(name='removeuser', description='Removes a user from a channel')
+    @dm.command(name='removeuser', description='Removes a user from a channel', aliases=['ru'])
     async def dm_remove_user(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Member):
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
@@ -208,7 +208,22 @@ class DMCommands(commands.Cog):
                                 value=permission.perm_type)
         await ctx.send(embed=embed)
 
-    @dm.command(name='port_old_channels', hidden=True)
+    @dm.command(name='resetchannel', description='Resets a channel to default permissions.', aliases=['rc'])
+    async def dm_channel_reset(self, ctx, to_reset: discord.TextChannel):
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == to_reset.id]
+            if not channel:
+                return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
+            await to_reset.edit(sync_permissions=True)
+            channel = channel[0]
+            channel.permissions = []
+            current_cat.commit(self.bot)
+            embed.title = f'{ctx.author.display_name} resets the permissions of {to_reset.name}'
+            embed.add_field(name=to_reset.name, value='Permissions Reset')
+        await ctx.send(embed=embed)
+
+    @dm.command(name='port_old_channels', hidden=True, aliases=['poc'])
     @is_owner()
     async def dm_port_old(self, ctx, old_category: discord.CategoryChannel, hub_channel: discord.TextChannel,
                           owner: discord.Member):
