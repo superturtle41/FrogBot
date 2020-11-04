@@ -60,7 +60,7 @@ class QuestRoles(commands.Cog):
             color_hex = int(role_color, 16)
             color = discord.Color(color_hex)
         except ValueError:
-            try_delete(question_msg)
+            await try_delete(question_msg)
             return await ctx.send('Invalid Hex Code, exiting.', delete_after=10)
         embed.color = color
         confirm_content = await next_question(embed, question_msg, f'Role `{role_name}` with the color of this embed'
