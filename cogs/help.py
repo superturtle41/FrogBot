@@ -1,5 +1,6 @@
 from discord.ext import commands
 from utils.functions import create_default_embed
+import discord
 
 
 class CustomHelp(commands.HelpCommand):
@@ -55,7 +56,10 @@ class CustomHelp(commands.HelpCommand):
                 name = '__' + name + '__'
             out.append(f'{name} {command.short_doc}')
         if len(out) > 0:
-            embed.add_field(name='Commands', value='\n'.join(out), inline=False)
+            try:
+                embed.add_field(name='Commands', value='\n'.join(out), inline=False)
+            except discord.HTTPException:
+                embed.add_field(name='Too many commands', value='Contact the Developer', inline=False)
         embed.set_footer(text=f'An underlined command has subcommands.\n'
                               f'See {self.clean_prefix}help <command name> for more details '
                               f'on individual commands')

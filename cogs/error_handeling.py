@@ -75,6 +75,10 @@ class CommandErrorHandler(commands.Cog):
             msg = str(error) or "Unknown Argument Parsing Error"
             return await ctx.send(f'Error: {msg}')
 
+        elif isinstance(error, commands.CommandOnCooldown):
+            msg = str(error) or "Command On Cooldown"
+            return await ctx.send(f'Error: {msg}')
+
         elif isinstance(error, commands.NoPrivateMessage):
             try:
                 await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')

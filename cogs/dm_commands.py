@@ -25,6 +25,7 @@ class DMCommands(commands.Cog):
     @commands.group(name='dm', invoke_without_command=True)
     @commands.check_any(commands.has_role('DM'), is_owner())
     @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
+    @commands.cooldown(1, 3, commands.BucketType.user)
     async def dm(self, ctx):
         """
         Base command for all other DM commands
