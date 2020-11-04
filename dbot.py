@@ -7,6 +7,7 @@ from discord.ext import commands
 from pymongo import MongoClient
 
 import bot_config as config
+from utils.context import Context as CustomContext
 from utils.functions import try_delete
 
 COGS = (
@@ -74,6 +75,10 @@ class FrogBot(commands.Bot):
             muted.append(muted_user['_id'])
         self.muted = muted
         return muted
+
+    # ---- Overrides ----
+    async def get_context(self, message, *, cls=CustomContext):
+        return await super().get_context(message, cls=cls)
 
 
 intents = discord.Intents(

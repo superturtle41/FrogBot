@@ -70,24 +70,13 @@ class DMCommands(commands.Cog):
         """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
-            confirm = await ctx.send('You are trying to delete your DM Category. Please Confirm (Yes/No)')
-
-            def check(m):
-                return m.author.id == ctx.author.id and m.channel.id == ctx.channel.id
-
-            try:
-                response = await self.bot.wait_for('message', check=check, timeout=30.0)
-            except asyncio.TimeoutError:
-                await ctx.send('Timed out waiting for answer.')
-                return
-            if not get_positivity(response.content):
-                await ctx.send('Category deletion cancelled.')
-                return
+            confirm = await ctx.prompt('You are trying to delete your DM Category.')
+            if confirm is None:
+                return await ctx.send('Timed out waiting for response.')
+            elif not confirm:
+                return await ctx.send('Category deletion cancelled.')
             embed.title = f'{ctx.author.display_name} deletes their DM Category!'
             embed.description = f'Deleting {len(current_cat.channels)} channels.'
-
-            await try_delete(confirm)
-            await try_delete(response)
 
             await current_cat.delete(self.bot)
         await ctx.send(embed=embed)
