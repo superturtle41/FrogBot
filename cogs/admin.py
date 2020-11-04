@@ -37,7 +37,7 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'User {ctx.author.display_name} added to authorized list.')
 
-    @commands.command(name='ban')
+    @commands.command(name='ban', hidden=True)
     @commands.guild_only()
     @commands.check_any(is_owner(), commands.has_guild_permissions(ban_members=True))
     async def manual_ban(self, ctx, to_ban: discord.Member, hard: bool = False):
@@ -97,7 +97,13 @@ class Admin(commands.Cog):
 
     @commands.command(name='prefix', description='Changes the Bot\'s Prefix. Must have Manage Server.')
     @commands.check_any(commands.has_guild_permissions(manage_guild=True), is_owner())
+    @commands.guild_only()
     async def change_prefix(self, ctx, to_change: str = None):
+        """
+        Changes the prefix for the current guild
+
+        Can only be ran in a guild. If no prefix is specified, will show the current prefix.
+        """
         guild_id = str(ctx.guild.id)
         if to_change is None:
             if guild_id in self.bot.prefixes:

@@ -241,6 +241,48 @@ class DMCommands(commands.Cog):
 
     # Channel Modification (Create/Delete)
 
+    @dm.command(name='createchannel', aliases=['cc'])
+    async def dm_create_channel(self, ctx, channel_name: str):
+        """
+        Creates a channel in your DM category.
+
+        Cannot have two channels with the same name.
+        """
+        channel_name = channel_name.replace(' ', '-')
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            channel = next((dmc for dmc in current_cat.channels if dmc.channel.name == channel_name), None)
+            if channel is not None:
+                return await ctx.send(f'There is already a channel named {channel_name} in your DM Category')
+            await current_cat.category.create_text_channel(name=channel_name)
+            await current_cat.sync_permissions(self.bot)
+            embed.title = f'{ctx.author.display_name} creates a new channel!'
+            embed.description = f'Channel with name {channel_name} has been created.'
+        await ctx.send(embed=embed)
+
+    @dm.command(name='deletechannel', aliases=['dc'])
+    async def dm_delete_channel(self, ctx, channel_to_delete: discord.TextChannel):
+        """
+        Deletes a channel from your DM Category.
+
+        Channel must be in your DM Category.
+        """
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            channel = next((dmc for dmc in current_cat.channels if dmc.channel.id == channel_to_delete.id), None)
+            if channel is None:
+                return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
+            embed.title = f'{ctx.author.display_name} deletes {channel_to_delete.name}'
+            embed.description = f'f{channel_to_delete.name} has been deleted.'
+            # Delete Channel
+            current_cat.channels.pop(current_cat.channels.index(channel))
+            current_cat.commit(self.bot)
+            try:
+                await channel_to_delete.delete()
+            except discord.HTTPException:
+                pass
+            await ctx.send(embed=embed)
+
     # Util Commands
 
     @dm.command(name='list', description='List permissions for a certain channel.')
