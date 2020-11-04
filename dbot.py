@@ -126,6 +126,15 @@ async def on_command(ctx):
     await try_delete(ctx.message)
 
 
+@bot.event
+async def on_guild_join(joined):
+    # Check to make sure we aren't approaching
+    if len(bot.guilds) > 90:
+        if joined.system_channel:
+            await joined.system_channel.send('Until I am verified, I cannot join any more servers.')
+        await joined.leave()
+
+
 for cog in COGS:
     bot.load_extension(cog)
 
