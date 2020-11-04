@@ -110,6 +110,12 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='addrole', description='Adds a role to a channel with read/write.', aliases=['ar'])
     async def dm_add_role(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Role, type_: int = 1):
+        """
+        Adds a role to a DM Channel with permissions.
+
+        The channel must be in your category.
+        For type, you can specify 0, 1, or 2. 0 = Channel Admin, 1 = Read/Send, 2 = Read Only (Spectator)
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
@@ -127,6 +133,12 @@ class DMCommands(commands.Cog):
     @dm.command(name='addrole-all', description='Adds a role to all of your DM channels.', aliases=['ara'])
     async def dm_add_role_all(self, ctx, to_add: discord.Role, type_: typing.Optional[int] = 1,
                               ignore: discord.TextChannel = None):
+        """
+        Adds a role to all of your DM Channels with permissions
+
+        For type, you can specify 0, 1, or 2. 0 = Channel Admin, 1 = Read/Send, 2 = Read Only
+        `ignore` is one channel you can specify that the command will ignore, usually your "DM Hub"/Secret Channel.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             embed.title = f'{ctx.author.display_name} adds {to_add.name} to all DM channels.'
@@ -143,6 +155,9 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='removerole', description='Removes a role from a channel.', aliases=['rr'])
     async def dm_remove_role(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Role):
+        """
+        Removes a role from a DM Channel.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
@@ -162,6 +177,9 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='removerole-all', description='Removes a roll from all channels.', aliases=['rra'])
     async def dm_remove_role_all(self, ctx, to_remove: discord.Role):
+        """
+        Removes a role from all of your DM channels.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             embed.title = f'{ctx.author.display_name} removes {to_remove.name} from all DM channels!'
@@ -177,6 +195,11 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='adduser', description='Adds a user to a channel with read/write', aliases=['au'])
     async def dm_add_user(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Member, type_: int = 1):
+        """
+        Adds a user to one of your DM Channels.
+
+        For type, you can specify 0, 1, or 2. 0 = Channel Admin, 1 = Read/Send, 2 = Read Only
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
@@ -193,6 +216,9 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='removeuser', description='Removes a user from a channel', aliases=['ru'])
     async def dm_remove_user(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Member):
+        """
+        Removes a user from one of your DM channels.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == channel_to_change.id]
@@ -213,10 +239,17 @@ class DMCommands(commands.Cog):
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
 
+    # Channel Modification (Create/Delete)
+
     # Util Commands
 
     @dm.command(name='list', description='List permissions for a certain channel.')
     async def dm_list_perms(self, ctx, channel: discord.TextChannel = None):
+        """
+        List the permissions for a DM Channel.
+
+        If no channel is specified, it will try to use the current channel.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             if channel is None:
@@ -232,6 +265,11 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='resetchannel', description='Resets a channel to default permissions.', aliases=['rc'])
     async def dm_channel_reset(self, ctx, to_reset: discord.TextChannel):
+        """
+        Resets one of your DM Channels to default permissions.
+
+        This just syncs the channel with the category.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             channel = [dmchannel for dmchannel in current_cat.channels if dmchannel.channel.id == to_reset.id]
