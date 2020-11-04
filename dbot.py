@@ -11,7 +11,8 @@ from utils.functions import try_delete
 
 COGS = (
     'cogs.util', 'cogs.eval', 'cogs.admin', 'cogs.error_handeling',
-    'cogs.quest_roles', 'cogs.dm_commands'
+    'cogs.quest_roles', 'cogs.dm_commands',
+    'cogs.help'
 )
 
 
@@ -81,7 +82,10 @@ intents = discord.Intents(
     typing=False
 )
 
-bot = FrogBot(desc='Personal Bot written by Dr Turtle', intents=intents,
+description = 'Small bot made for Play-by-Post Dungeons & Dragons.\n' \
+              'Written by Dr Turtle#1771'
+
+bot = FrogBot(desc=description, intents=intents,
               allowed_mentions=discord.AllowedMentions.none())
 
 log_formatter = logging.Formatter('%(levelname)s | %(name)s: %(message)s')

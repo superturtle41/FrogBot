@@ -24,7 +24,14 @@ class DMCommands(commands.Cog):
 
     @commands.group(name='dm', invoke_without_command=True)
     @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm(self, ctx):
+        """
+        Base command for all other DM commands
+
+        All DM commands require a rolled called DM.
+        The bot must have the "Manage Channels" and "Manage Messages" permissions.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             embed.title = f'{ctx.author.display_name} checks their DM Category!'
@@ -38,6 +45,11 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='setup', description='Creates a DM Category.', aliases=['create', 'new'])
     async def dm_setup(self, ctx):
+        """
+        Creates a new DM Category.
+
+        Will also create one channel for you, this is supposed to be your hub channel, but you can use it for whatever.
+        """
         try:
             new_category = await DMCategory.new(self.bot, ctx.guild, ctx.author)
         except CategoryExists:
@@ -51,6 +63,11 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='delete', description='Deletes a DM Category.', aliases=['remove', 'del'])
     async def dm_delete(self, ctx):
+        """
+        Deletes your DM category for that server.
+
+        If you do not have a DM category it will do nothing.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             confirm = await ctx.send('You are trying to delete your DM Category. Please Confirm (Yes/No)')
@@ -77,6 +94,11 @@ class DMCommands(commands.Cog):
 
     @dm.command(name='update', description='Syncs all Channel Permissions', aliases=['uc'])
     async def dm_update(self, ctx):
+        """
+        Goes through all of the channels in your category and syncs them.
+
+        Will add new channels to the bot's database and will sync the permissions of all channels.
+        """
         current_cat, embed, test = await get_category_and_embed(ctx)
         if test:
             new_channels = len(await current_cat.sync_permissions(self.bot))

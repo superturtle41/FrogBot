@@ -22,7 +22,7 @@ def insert_returns(body):
         insert_returns(body[-1].body)
 
 
-class REPL(commands.Cog):
+class Code(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.sessions = set()
@@ -94,4 +94,4 @@ class REPL(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(REPL(bot))
+    bot.add_cog(Code(bot))

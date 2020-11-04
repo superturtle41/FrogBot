@@ -10,6 +10,11 @@ class QuestRoles(commands.Cog):
 
     @commands.command(name='questrole', description='Creates a role for quests')
     async def create_quest_role(self, ctx):
+        """
+        Creates a Role for Quests
+
+        The role created will have the default permissions that \@everyone has
+        """
         author = ctx.author
         channel = ctx.channel
         user_mention = discord.AllowedMentions(users=[ctx.author])

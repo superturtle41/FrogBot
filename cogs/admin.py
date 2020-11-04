@@ -37,9 +37,9 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'User {ctx.author.display_name} added to authorized list.')
 
-    @commands.command(name='ban', description='Bans a user from the server.')
-    @is_owner()
+    @commands.command(name='ban')
     @commands.guild_only()
+    @commands.check_any(is_owner(), commands.has_guild_permissions(ban_members=True))
     async def manual_ban(self, ctx, to_ban: discord.Member, hard: bool = False):
         try:
             if hard:
@@ -51,8 +51,11 @@ class Admin(commands.Cog):
         except discord.HTTPException:
             return await ctx.author.dm_channel.send('An unknown discord error occurred. Pleas try again later.')
 
-    @commands.command(name='leave', description='Leave a Guild')
+    @commands.command(name='leave', hidden=True)
     async def leave_guild(self, ctx, guild_id: int):
+        """
+        Leaves the specified guild
+        """
         to_leave = await self.bot.get_guild(guild_id)
         if to_leave is not None:
             await ctx.send(f'Leaving Guild: `{to_leave.name}`')
