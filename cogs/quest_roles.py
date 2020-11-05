@@ -19,27 +19,25 @@ class QuestRoles(commands.Cog):
         channel = ctx.channel
         user_mention = discord.AllowedMentions(users=[ctx.author])
 
+        color_converter = commands.ColorConverter()
+
         def chk(m):
             return m.author == author and m.channel == channel
 
-        async def get_response(timeout=90):
-            try:
-                response = await self.bot.wait_for('message', timeout=timeout, check=chk)
-                return response
-            except asyncio.TimeoutError:
-                await ctx.send('Timed out waiting for answer.')
-                return -1
-
-        async def next_question(ebd, qmsg, newdesc, mentions=None):
-            ebd.description = newdesc
-            await qmsg.edit(embed=ebd, allowed_mentions=mentions)
-            msg = await get_response(timeout=60)
-            content = msg.content
-            await try_delete(msg)
-            return content
+        async def prompt(message: discord.Message, ebd: discord.Embed, content: str,
+                         mentions: discord.AllowedMentions = None):
+            if content:
+                ebd.description = content
+            await message.edit(embed=ebd, allowed_mentions=mentions)
+            result = await self.bot.wait_for('message', check=chk, timeout=60)
+            if result is None:
+                return result
+            content = result.content
+            await try_delete(result)
+            return content, ebd
 
         def check_stop(content):
-            if content.lower() == 'stop' or content.lower() == 'cancel':
+            if content.lower() in ['stop', 'cancel', 'quit', 'exit']:
                 return True
             else:
                 return False
@@ -47,31 +45,34 @@ class QuestRoles(commands.Cog):
         embed = create_default_embed(ctx)
         embed.title = 'Quest Role Creation'
         question_msg = await ctx.send(embed=embed)
-        role_name = await next_question(embed, question_msg, f'{ctx.author.mention}, '
-                                                             f'what would you like this role to be called?',
-                                        user_mention)
+        role_name, embed = await prompt(question_msg, embed,
+                                        f'{ctx.author.mention}, what would you like this role to be called?',
+                                        mentions=user_mention)
         if check_stop(role_name):
             return
-        role_color = await next_question(embed, question_msg, f'Role Name: `{role_name}`\n'
-                                                              f'What color would you like this role to be?')
+
+        role_color, embed = await prompt(question_msg, embed,
+                                         f'Role Name: `{role_name}`\nWhat color would you like this role to be?')
         if check_stop(role_color):
             return
         try:
-            color_hex = int(role_color, 16)
-            color = discord.Color(color_hex)
-        except ValueError:
+            color = await color_converter.convert(ctx=ctx, argument=role_color.lower())
+        except (commands.CommandError, commands.BadColourArgument):
             await try_delete(question_msg)
-            return await ctx.send('Invalid Hex Code, exiting.', delete_after=10)
+            return await ctx.send('Invalid Color provided, exiting.', delete_after=10)
+
         embed.color = color
-        confirm_content = await next_question(embed, question_msg, f'Role `{role_name}` with the color of this embed'
-                                                                   f' will be created. Please confirm.')
+
+        confirm_content, embed = await prompt(question_msg, embed,
+                                              f'Role `{role_name}` with the color of this embed '
+                                              f'will be created. Please confirm.')
         if get_positivity(confirm_content):
             new_role = await ctx.guild.create_role(name=role_name, color=color, reason='Quest Role Creation')
             await ctx.send(f'Role {new_role.mention} created.', delete_after=10,
                            allowed_mentions=discord.AllowedMentions(roles=[new_role]))
-            await try_delete(question_msg)
+            return await try_delete(question_msg)
         else:
-            await ctx.send('Operation Cancelled, stopping.')
+            return await ctx.send('Operation Cancelled, stopping.')
 
 
 def setup(bot):
