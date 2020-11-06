@@ -22,10 +22,11 @@ class Admin(commands.Cog):
     @is_owner()
     async def change_status(self, ctx, *, value: str):
         if value != 'reset':
-            ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'}, {'$set': {'status': value}}, upsert=True)
+            await ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'},
+                                                         {'$set': {'status': value}}, upsert=True)
         else:
-            ctx.bot.mdb['bot_settings'].delete_one({'setting': 'status'})
-        await ctx.bot.change_presence(activity=ctx.bot.update_status_from_db())
+            await ctx.bot.mdb['bot_settings'].delete_one({'setting': 'status'})
+        await ctx.bot.change_presence(activity=await ctx.bot.update_status_from_db())
 
         return await ctx.send(f'Status changed to {value}' if value != 'reset' else 'Status Reset.')
 
@@ -33,7 +34,7 @@ class Admin(commands.Cog):
     @is_owner()
     async def authorize_add(self, ctx, to_auth: discord.Member):
         uid = to_auth.id
-        ctx.bot.mdb['authorized'].update_one({'_id': uid}, {'$set': {'_id': uid}}, upsert=True)
+        await ctx.bot.mdb['authorized'].update_one({'_id': uid}, {'$set': {'_id': uid}}, upsert=True)
 
         return await ctx.send(f'User {ctx.author.display_name} added to authorized list.')
 
@@ -63,7 +64,6 @@ class Admin(commands.Cog):
                 await self.bot.leave(to_leave)
             except discord.HTTPException:
                 pass
-            return
         else:
             return await ctx.send('Guild not found.')
 
@@ -74,10 +74,11 @@ class Admin(commands.Cog):
     async def mute(self, ctx, to_mute: discord.Member):
         record = {'_id': to_mute.id}
         db = self.bot.mdb['muted_clients']
-        if db.find(record).count() == 0:
-            db.insert_one(record)
+        muted = await db.find_one(record)
+        if muted is None:
+            await db.insert_one(record)
+            await self.bot.update_muted_from_db()
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has been muted.')
-            self.bot.update_muted_from_db()
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has already been muted.')
 
@@ -86,10 +87,11 @@ class Admin(commands.Cog):
     async def unmute(self, ctx, to_mute: discord.Member):
         record = {'_id': to_mute.id}
         db = self.bot.mdb['muted_clients']
-        if db.find(record).count() != 0:
-            db.delete_one(record)
+        muted = await db.find_one(record)
+        if muted:
+            await db.delete_one(record)
+            await self.bot.update_muted_from_db()
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has been un-muted.')
-            self.bot.update_muted_from_db()
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} is not muted.')
 
@@ -109,7 +111,7 @@ class Admin(commands.Cog):
             if guild_id in self.bot.prefixes:
                 prefix = self.bot.prefixes.get(guild_id, self.bot.prefix)
             else:
-                dbsearch = self.bot.mdb['prefixes'].find_one({'guild_id': guild_id})
+                dbsearch = await self.bot.mdb['prefixes'].find_one({'guild_id': guild_id})
                 if dbsearch is not None:
                     prefix = dbsearch.get('prefix', self.bot.prefix)
                 else:
@@ -117,9 +119,8 @@ class Admin(commands.Cog):
                 self.bot.prefixes[guild_id] = prefix
             return await ctx.send(f'No prefix specified to Change. Current Prefix: `{prefix}`')
         else:
-            if ' ' in to_change:
-                return await ctx.send('The new prefix must not contain spaces.')
-            ctx.bot.mdb['prefixes'].update_one({'guild_id': guild_id}, {'$set': {'prefix': to_change}}, upsert=True)
+            await ctx.bot.mdb['prefixes'].update_one({'guild_id': guild_id},
+                                                     {'$set': {'prefix': to_change}}, upsert=True)
             ctx.bot.prefixes[guild_id] = to_change
             return await ctx.send(f'Guild prefix updated to `{to_change}`')
 

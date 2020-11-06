@@ -3,8 +3,8 @@ import logging
 import sys
 
 import discord
-from discord.ext import commands
-from pymongo import MongoClient
+from discord.ext import commands, tasks
+import motor.motor_asyncio
 
 import bot_config as config
 from utils.context import Context as CustomContext
@@ -17,14 +17,14 @@ COGS = (
 )
 
 
-def get_prefix(client, message):
+async def get_prefix(client, message):
     if not message.guild:
         return commands.when_mentioned_or(config.PREFIX)(client, message)
     guild_id = str(message.guild.id)
     if guild_id in client.prefixes:
         prefix = client.prefixes.get(guild_id, config.PREFIX)
     else:
-        dbsearch = client.mdb['prefixes'].find_one({'guild_id': guild_id})
+        dbsearch = await client.mdb['prefixes'].find_one({'guild_id': guild_id})
         if dbsearch is not None:
             prefix = dbsearch.get('prefix', config.PREFIX)
         else:
@@ -39,13 +39,11 @@ class FrogBot(commands.Bot):
         self.launch_time = datetime.datetime.utcnow()
         self._dev_id = config.DEV_ID
         self._prefix = config.PREFIX
-        self.mongo_client = MongoClient(config.MONGO_URL)
+        self.mongo_client = motor.motor_asyncio.AsyncIOMotorClient(config.MONGO_URL)
         self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = set()
         self.prefixes = dict()
-        super(FrogBot, self).__init__(command_prefix, description=desc,
-                                      activity=self.update_status_from_db(), **options)
-        self.update_muted_from_db()
+        super(FrogBot, self).__init__(command_prefix, description=desc, **options)
 
     @property
     def uptime(self):
@@ -60,8 +58,8 @@ class FrogBot(commands.Bot):
     def prefix(self):
         return self._prefix
 
-    def update_status_from_db(self):
-        current_status = self.mdb['bot_settings'].find_one({'setting': 'status'})
+    async def update_status_from_db(self):
+        current_status = await self.mdb['bot_settings'].find_one({'setting': 'status'})
         if current_status is None:
             current_status = f'{config.DEFAULT_STATUS} | {config.PREFIX}help'
         else:
@@ -69,9 +67,10 @@ class FrogBot(commands.Bot):
         activity = discord.Game(name=current_status)
         return activity
 
-    def update_muted_from_db(self):
+    async def update_muted_from_db(self):
         muted = []
-        for muted_user in self.mdb['muted_clients'].find():
+        db_muted = self.mdb.muted_clients.find()
+        async for muted_user in db_muted:
             muted.append(muted_user['_id'])
         self.muted = muted
         return muted
@@ -116,6 +115,19 @@ async def on_ready():
     log.info(ready_message)
 
 
+@tasks.loop(seconds=5, count=1)
+async def db_update():
+    log.info('Updating Status and Muted from DB')
+    new_status = await bot.update_status_from_db()
+    await bot.change_presence(activity=new_status)
+    await bot.update_muted_from_db()
+
+
+@db_update.before_loop
+async def before_db_update():
+    await bot.wait_until_ready()
+
+
 @bot.event
 async def on_message(message):
     if message.author.bot:
@@ -149,4 +161,5 @@ for cog in COGS:
 
 if __name__ == '__main__':
     bot.mdb['authorized'].update_one({'_id': bot.owner}, {'$set': {'_id': bot.owner}}, upsert=True)
+    db_update.start()
     bot.run(config.TOKEN)
