@@ -41,7 +41,7 @@ class Utility(commands.Cog):
             out += '\n'+f'Current Ready Uptime: {ready_up}'
         return await ctx.send(out)
 
-    @commands.command(name='info', aliases=['stats'])
+    @commands.command(name='info', aliases=['stats', 'about'])
     async def info(self, ctx):
         """
         Displays some information about the bot.
