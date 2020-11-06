@@ -13,7 +13,7 @@ class QuestRoles(commands.Cog):
         """
         Creates a Role for Quests
 
-        The role created will have the default permissions that \@everyone has
+        The role created will have the default permissions that \@everyone has at the time of creation.
         """
         author = ctx.author
         channel = ctx.channel
