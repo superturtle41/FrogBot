@@ -114,7 +114,7 @@ class DMCommands(commands.Cog):
             channel: DMChannel = channel[0]
             new_perms = DMPermissions(type_=0, perm_type=type_, obj=to_add, guild=ctx.guild)
             await channel.add_permission(new_perms)
-            current_cat.commit(self.bot)
+            await current_cat.commit(self.bot)
             embed.title = f'{ctx.author.display_name} adds {to_add.name} to #{channel.channel.name}'
             embed.description = f'{to_add.name} has been added to #{channel.channel.name}' \
                                 f' with {new_perms.perm_type} permissions'
@@ -139,7 +139,7 @@ class DMCommands(commands.Cog):
                         continue
                 new_perms = DMPermissions(type_=0, perm_type=type_, obj=to_add, guild=ctx.guild)
                 await channel.add_permission(new_perms)
-                current_cat.commit(self.bot)
+                await current_cat.commit(self.bot)
                 embed.add_field(name=channel.channel.name, value=f'Added @{to_add.name} with {new_perms.perm_type}')
         return await ctx.send(embed=embed)
 
@@ -155,7 +155,7 @@ class DMCommands(commands.Cog):
                 return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
             channel: DMChannel = channel[0]
             result = await channel.remove_perm_for(to_remove)
-            current_cat.commit(self.bot)
+            await current_cat.commit(self.bot)
             if result:
                 embed.title = f'{ctx.author.display_name} removes {to_remove.name} from {channel_to_change.name}!'
                 embed.description = f'{to_remove.name} has been removed from {channel_to_change.name}.'
@@ -177,7 +177,7 @@ class DMCommands(commands.Cog):
                 result = await channel.remove_perm_for(to_remove)
                 if result:
                     embed.add_field(name=channel.channel.name, value=f'Removed Permissions for {to_remove.name}')
-            current_cat.commit(self.bot)
+            await current_cat.commit(self.bot)
             await channel.sync_permissions()
         return await ctx.send(embed=embed)
 
@@ -198,7 +198,7 @@ class DMCommands(commands.Cog):
             channel: DMChannel = channel[0]
             new_perms = DMPermissions(type_=1, perm_type=type_, obj=to_add, guild=ctx.guild)
             await channel.add_permission(new_perms)
-            current_cat.commit(self.bot)
+            await current_cat.commit(self.bot)
             embed.title = f'{ctx.author.display_name} adds {to_add.display_name} to #{channel.channel.name}'
             embed.description = f'{to_add.display_name} has been added to ' \
                                 f'#{channel.channel.name} with {new_perms.perm_type} permissions'
@@ -216,7 +216,7 @@ class DMCommands(commands.Cog):
                 return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
             channel: DMChannel = channel[0]
             result = await channel.remove_perm_for(to_remove)
-            current_cat.commit(self.bot)
+            await current_cat.commit(self.bot)
             if result:
                 embed.title = f'{ctx.author.display_name} removes ' \
                               f'{to_remove.display_name} from #{channel_to_change.name}!'
@@ -266,7 +266,7 @@ class DMCommands(commands.Cog):
             embed.description = f'f{channel_to_delete.name} has been deleted.'
             # Delete Channel
             current_cat.channels.pop(current_cat.channels.index(channel))
-            current_cat.commit(self.bot)
+            await current_cat.commit(self.bot)
             try:
                 await channel_to_delete.delete()
             except discord.HTTPException:
@@ -310,7 +310,7 @@ class DMCommands(commands.Cog):
             await to_reset.edit(sync_permissions=True)
             channel = channel[0]
             channel.permissions = []
-            current_cat.commit(self.bot)
+            await current_cat.commit(self.bot)
             embed.title = f'{ctx.author.display_name} resets the permissions of {to_reset.name}'
             embed.add_field(name=to_reset.name, value='Permissions Reset')
         await ctx.send(embed=embed)

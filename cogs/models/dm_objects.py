@@ -52,7 +52,7 @@ class DMCategory:
     async def new(cls, bot, guild, owner):
         # Check to make sure User does not already have a DM Category
         db = bot.mdb['dmcategories']
-        exists = db.find_one({'owner_id': owner.id, 'guild_id': guild.id})
+        exists = await db.find_one({'owner_id': owner.id, 'guild_id': guild.id})
         if exists is not None:
             raise CategoryExists('User has an existing category in this server.')
         # Create Default Permissions
@@ -66,7 +66,7 @@ class DMCategory:
         new_channel = await guild.create_text_channel(name=f'dm-hub-{owner.display_name}', category=new_category)
         category = DMCategory(owner=owner, category=new_category, guild=guild, channels=[])
         category.channels = [DMChannel(category=category, permissions=[], channel=new_channel)]
-        db.insert_one(category.to_dict())
+        await db.insert_one(category.to_dict())
         return category
 
     @classmethod
@@ -84,20 +84,20 @@ class DMCategory:
         category = DMCategory(owner=owner, category=new_category, guild=guild, channels=[])
         category.channels = [DMChannel(category=category, permissions=[], channel=new_channel)]
         await category.sync_permissions(bot)
-        db.insert_one(category.to_dict())
+        await db.insert_one(category.to_dict())
         return category
 
     @classmethod
     async def from_ctx(cls, ctx):
-        existing = ctx.bot.mdb['dmcategories'].find_one({'owner_id': ctx.author.id, 'guild_id': ctx.guild.id})
+        existing = await ctx.bot.mdb['dmcategories'].find_one({'owner_id': ctx.author.id, 'guild_id': ctx.guild.id})
         if existing is not None:
             existing.pop('_id')
             return cls.from_dict(ctx.bot, existing)
         else:
             return None
 
-    def commit(self, bot):
-        bot.mdb['dmcategories'].update_one({'owner_id': self.owner.id, 'guild_id': self.guild.id},
+    async def commit(self, bot):
+        await bot.mdb['dmcategories'].update_one({'owner_id': self.owner.id, 'guild_id': self.guild.id},
                                            {'$set': self.to_dict()}, upsert=True)
 
     async def delete(self, bot):
@@ -111,7 +111,7 @@ class DMCategory:
         except (discord.HTTPException, discord.NotFound):
             pass
 
-        bot.mdb['dmcategories'].delete_one({'category_id': to_delete_id})
+        await bot.mdb['dmcategories'].delete_one({'category_id': to_delete_id})
 
     async def update_channels(self):
         existings = [c.channel.id for c in self.channels]
@@ -128,7 +128,7 @@ class DMCategory:
         new = await self.update_channels()
         for channel in self.channels:
             await channel.sync_permissions()
-        self.commit(bot)
+        await self.commit(bot)
         return new
 
     @property
@@ -208,10 +208,10 @@ class DMChannel:
             intersect = intersect[0]
             to_remove = self.permissions.index(intersect)
             self.permissions.pop(to_remove)
+            await self.sync_permissions()
             return True
         else:
             return None
-        await self.sync_permissions()
 
 
     @property

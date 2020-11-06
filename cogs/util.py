@@ -49,7 +49,9 @@ class Utility(commands.Cog):
         embed = create_default_embed(ctx)
         embed.title = 'FrogBot Information'
         embed.description = 'Bot built by Dr Turtle#1771 made for D&D and personal servers!'
-        embed.add_field(name='Stats', value=f'Guilds: {len(self.bot.guilds)}')
+        members = sum([guild.member_count for guild in self.bot.guilds])
+        embed.add_field(name='Guilds', value=f'{len(self.bot.guilds)}')
+        embed.add_field(name='Members', value=f'{members}')
         embed.url = 'https://github.com/1drturtle/FrogBot'
 
         await ctx.send(embed=embed)
