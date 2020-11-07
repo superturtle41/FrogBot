@@ -12,7 +12,7 @@ from utils.functions import try_delete
 
 COGS = (
     'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling',
-    'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
+    'cogs.quest_roles', 'cogs.dm_commands',
     'cogs.help'
 )
 
