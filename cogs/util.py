@@ -66,6 +66,16 @@ class Utility(commands.Cog):
             out.prepend(f'{ctx.author.display_name}: ')
         return await ctx.send(out)
 
+    @commands.command(name='avatar')
+    async def say(self, ctx, who: discord.Member = None):
+        """
+        Gives you the avatar of whoever you specify, or yourself if you don't specify anyone.
+        """
+        url = ctx.author.avatar_url
+        if who:
+            url = who.avatar_url
+        return await ctx.send(url)
+
 
 def setup(bot):
     bot.add_cog(Utility(bot))
