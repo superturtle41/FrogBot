@@ -3,15 +3,14 @@ from utils.functions import create_default_embed
 import discord
 
 
-def generate_command_names(command_list, use_doc_str = True):
+def generate_command_names(command_list):
     out = []
     for command in command_list:
         parent = (command.full_parent_name + " ") if command.full_parent_name else ""
-        name = f'**{parent}{command.name}:**'
+        name = f'`{parent}{command.name}`'
         if isinstance(command, commands.Group) and len(command.commands):
             name = '__' + name + '__'
-
-        out.append(f'{name}{(" "+command.short_doc) if use_doc_str else ""}')
+        out.append(name)
     return out
 
 
@@ -41,14 +40,9 @@ class CustomHelp(commands.HelpCommand):
         embed.title = f'FrogBot Help - {cog.qualified_name}'
         command_list = await self.filter_commands(cog.get_commands(), sort=True)
         embed.description = cog.description or 'No description specified.'
-        out = []
-        for command in command_list:
-            name = f'**{command.name}:**'
-            if isinstance(command, commands.Group) and len(command.commands):
-                name = '__' + name + '__'
-            out.append(f'{name} {command.short_doc}')
+        out = generate_command_names(command_list)
         if len(out) > 0:
-            embed.add_field(name='Commands', value='\n'.join(out), inline=False)
+            embed.add_field(name='Commands', value=' '.join(out), inline=False)
         embed.set_footer(text=f'An underlined command has subcommands.\n'
                               f'See {self.clean_prefix}help <command name> for more details '
                               f'on individual commands')
@@ -61,10 +55,8 @@ class CustomHelp(commands.HelpCommand):
         command_list = await self.filter_commands(group.commands, sort=True)
         embed.description = group.help or 'No help specified.'
         out = generate_command_names(command_list)
-        if len('\n'.join(out)) > 1024:
-            out = generate_command_names(command_list, use_doc_str=False)
         if len(out) > 0:
-            embed.add_field(name='Commands', value='\n'.join(out), inline=False)
+            embed.add_field(name='Commands', value=' '.join(out), inline=False)
         embed.set_footer(text=f'An underlined command has subcommands.\n'
                               f'See {self.clean_prefix}help <command name> for more details '
                               f'on individual commands')
