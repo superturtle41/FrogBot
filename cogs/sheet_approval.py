@@ -39,7 +39,7 @@ class SheetApproval(commands.Cog):
 
     async def cog_check(self, ctx):
         gid = getattr(ctx.guild, 'id', None)
-        return ctx.guild.id == self.bot.my_server_id
+        return gid == self.bot.my_server_id
 
     async def delete_sheet(self, ctx, sheet: ToBeApproved):
         await self.bot.mdb['to_approve'].delete_one({'id': sheet.id})
