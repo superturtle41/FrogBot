@@ -38,6 +38,7 @@ class SheetApproval(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx):
+        gid = getattr(ctx.guild, 'id', None)
         return ctx.guild.id == self.bot.my_server_id
 
     async def delete_sheet(self, ctx, sheet: ToBeApproved):
