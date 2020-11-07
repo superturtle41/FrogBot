@@ -12,7 +12,7 @@ from utils.functions import try_delete
 
 COGS = (
     'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling',
-    'cogs.quest_roles', 'cogs.dm_commands',
+    'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
     'cogs.help'
 )
 
@@ -43,7 +43,7 @@ class FrogBot(commands.Bot):
         self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = set()
         self.prefixes = dict()
-        self.my_server_id = int(config.MY_SERVER)
+        self.personal_server = None
         super(FrogBot, self).__init__(command_prefix, description=desc, **options)
 
     @property
@@ -118,6 +118,13 @@ async def on_ready():
 
 @tasks.loop(seconds=5, count=1)
 async def db_update():
+    result = await bot.mdb['bot_settings'].find_one({'setting': 'personal_server'})
+    if result is not None:
+        result = result['server_id']
+    bot.personal_server = result
+
+    await bot.mdb['authorized'].update_one({'_id': bot.owner}, {'$set': {'_id': bot.owner}}, upsert=True)
+
     log.info('Updating Status and Muted from DB')
     new_status = await bot.update_status_from_db()
     await bot.change_presence(activity=new_status)
@@ -161,6 +168,5 @@ for cog in COGS:
     bot.load_extension(cog)
 
 if __name__ == '__main__':
-    bot.mdb['authorized'].update_one({'_id': bot.owner}, {'$set': {'_id': bot.owner}}, upsert=True)
     db_update.start()
     bot.run(config.TOKEN)

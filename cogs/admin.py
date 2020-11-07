@@ -30,6 +30,17 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'Status changed to {value}' if value != 'reset' else 'Status Reset.')
 
+    @commands.command(name='set_server', hidden=True)
+    @is_owner()
+    async def set_personal_server(self, ctx, guild_id: int):
+        await ctx.bot.mdb['bot_settings'].update_one({'setting': 'personal_server'},
+                                                     {'$set': {'server_id': guild_id}},
+                                                     upsert=True
+                                                     )
+        self.bot.personal_server = guild_id
+
+        return await ctx.send(f'Set {guild_id} to personal server.')
+
     @commands.command(name='authorize', description='Add user to authorized list.', hidden=True)
     @is_owner()
     async def authorize_add(self, ctx, to_auth: discord.Member):

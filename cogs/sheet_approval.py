@@ -38,8 +38,8 @@ class SheetApproval(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        gid = getattr(ctx.guild, 'id', None)
-        return gid == self.bot.my_server_id
+        gid = getattr(ctx.guild, 'id', 0)
+        return gid == self.bot.personal_server
 
     async def get_sheet(self, ctx, id):
         # Get ToBeApproved object
