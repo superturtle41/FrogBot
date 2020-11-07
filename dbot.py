@@ -12,7 +12,7 @@ from utils.functions import try_delete
 
 COGS = (
     'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling',
-    'cogs.quest_roles', 'cogs.dm_commands',
+    'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
     'cogs.help'
 )
 
@@ -43,6 +43,7 @@ class FrogBot(commands.Bot):
         self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = set()
         self.prefixes = dict()
+        self.my_server_id = int(config.MY_SERVER)
         super(FrogBot, self).__init__(command_prefix, description=desc, **options)
 
     @property
