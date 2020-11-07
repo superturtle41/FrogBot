@@ -15,3 +15,12 @@ def is_authorized():
         return authorized is not None
 
     return commands.check(predicate)
+
+
+def is_personal_server():
+    async def predicate(ctx):
+        if ctx.bot.personal_server is None:
+            return False
+        return ctx.guild_id == ctx.bot.personal_server
+
+    return commands.check(predicate)

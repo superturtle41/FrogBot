@@ -67,3 +67,7 @@ class Context(commands.Context):
                 await msg.delete()
         finally:
             return confirm
+
+    @property
+    def guild_id(self):
+        return getattr(self.guild, 'id', None)

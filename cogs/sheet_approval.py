@@ -1,169 +1,172 @@
 from discord.ext import commands
-
 from utils.functions import create_default_embed, try_delete
+from utils.checks import is_personal_server
+import discord
 
 
 class ToBeApproved:
-    def __init__(self, id: int, approvals: list, content: str, owner_id: int, channel_id: int):
+    def __init__(self, message_id: int, approvals: list, channel_id: int, owner_id: int):
         """
-        :param id: ID of message
-        :param approvals: List of Member ID's who approved.
+        :param message_id: ID of Message that created this.
+        :param approvals: List of Member ID's who have approved the Sheet
+        :param channel_id: Channel ID that the message was sent in
+        :param owner_id: Member ID of owner of sheet.
         """
+        self.message_id = message_id
         self.approvals = approvals
-        self.id = id
-        self.owner_id = owner_id
-        self.content = content
         self.channel_id = channel_id
+        self.owner_id = owner_id
 
     @classmethod
     def from_dict(cls, data):
-        return cls(data['id'], data['approvals'], data['content'], data['owner_id'], data['channel_id'])
+        return cls(**data)
 
     def to_dict(self):
         return {
-            'id': self.id,
+            'message_id': self.message_id,
             'approvals': self.approvals,
-            'content': self.content,
-            'owner_id': self.owner_id,
-            'channel_id': self.channel_id
+            'channel_id': self.channel_id,
+            'owner_id': self.owner_id
         }
 
-    async def get_message(self, ctx):
-        message = await ctx.guild.get_channel(self.channel_id).fetch_message(self.id)
-        return message
+    async def get_message(self, guild):
+        msg = guild.get_channel(self.channel_id)
+        if msg is not None:
+            msg = await msg.fetch_message(self.message_id)
+        return msg
+
+    async def commit(self, db):
+        db.update_one({'message_id': self.message_id}, {'$set': self.to_dict()}, upsert=True)
+
+    async def fields(self, guild):
+        message = await self.get_message(guild)
+        embed = message.embeds[0]
+        embed.clear_fields()
+        for approval in self.approvals:
+            x = guild.get_member(approval)
+            if x is not None:
+                embed.add_field(name='Approval', value=x.display_name)
+        if len(self.approvals) >= 2:
+            mention = guild.get_member(self.owner_id)
+            embed.add_field(name=f'Approved!',
+                            value=f'{mention.mention}, Your character has been approved! '
+                                  f'Go to <#707974596816535553> and grab your player roles,'
+                                  f' and then go to <#608030916778000395> and do the pinned commands for your sheet!',
+                            inline=False)
+            general = guild.get_channel(607371291636400130)
+            await general.send(f'{mention.mention}, your character with the following content has been approved:\n'
+                               f'```\n{embed.description}\n```\n'
+                               f'Check your submission in <#607374590146117653> for details on what to do next.',
+                               allowed_mentions=discord.AllowedMentions(users=[mention]))
+        await message.edit(embed=embed)
+
+    async def add_approval(self, guild, approver):
+        if approver.id in self.approvals:
+            return
+        if approver.id == self.owner_id:
+            return
+
+        self.approvals.append(approver.id)
+
+        if len(self.approvals) >= 2:
+            await self.approve(guild)
+        else:
+            await self.fields(guild)
+
+    async def remove_approval(self, guild, user_id):
+        member = guild.get_member(user_id)
+        if member.id not in self.approvals:
+            return
+        self.approvals.remove(member.id)
+        await self.fields(guild)
+
+    async def approve(self, guild):
+        if len(self.approvals) < 2:
+            return
+        await self.fields(guild)
+        # Ping them with stuff to do
+
+        # Add Player role to user if they don't already have it.
+        member = guild.get_member(self.owner_id)
+        if len([role for role in member.roles if role.name == 'Player']) == 0:
+            player_role = [role for role in guild.roles if role.name == 'Player'][0]
+            if role := [role for role in member.roles if role.name == 'Commoner']:
+                await member.remove_role(role[0])
+            await member.add_roles(player_role)
+
+
+APPROVAL_ROLES = ('DM', 'Lord of the Sheet')
 
 
 class SheetApproval(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def cog_check(self, ctx):
-        gid = getattr(ctx.guild, 'id', 0)
-        return gid == self.bot.personal_server
-
-    async def get_sheet(self, ctx, id):
-        # Get ToBeApproved object
-        db_result = await self.bot.mdb['to_approve'].find_one({'id': id})
-        if db_result is None:
-            await ctx.send('Could not find a sheet with Approval ID: '+str(id))
+    async def sheet_from_emoji(self, payload) -> ToBeApproved:
+        # Check the Guild
+        guild_id = payload.guild_id
+        if guild_id != self.bot.personal_server:
             return None
-        approval = ToBeApproved.from_dict(db_result)
-        # Get Owner
-        sheet_owner = ctx.guild.get_member(approval.owner_id)
-        if sheet_owner is None:
-            await self.delete_sheet(ctx, approval)
-            await ctx.send('The owner of the sheet could not be found. Deleting sheet from database...')
+
+        # Check the Roles
+        member = payload.member
+        if member is None:
+            member = self.bot.get_guild(guild_id).get_member(payload.user_id)
+            if member is None:
+                return None
+        if len([role for role in member.roles if role.name in APPROVAL_ROLES]) == 0:
             return None
-        return approval
 
-    async def delete_sheet(self, ctx, sheet: ToBeApproved):
-        await self.bot.mdb['to_approve'].delete_one({'id': sheet.id})
-        message = await sheet.get_message(ctx)
-        if message is not None:
-            await try_delete(message)
+        # Check to see if it's an existing sheet
+        result = await self.bot.mdb['to_approve'].find_one({'message_id': payload.message_id})
+        if result is None:
+            return None
+        # Get rid of object id
+        result.pop('_id')
 
-    async def approve_sheet(self, ctx, sheet: ToBeApproved):
-        await self.bot.mdb['to_approve'].delete_one({'id': sheet.id})
-        message = await sheet.get_message(ctx)
-        if message is not None:
-            await SheetApproval.add_approval_fields(ctx, sheet)
-            await message.add_reaction('✅')
+        sheet: ToBeApproved = ToBeApproved.from_dict(result)
+        return sheet
 
-    async def add_approval(self, ctx, sheet: ToBeApproved):
-        await self.bot.mdb['to_approve'].update_one({'id': sheet.id}, {'$set': sheet.to_dict()})
-        message = await sheet.get_message(ctx)
-        if message is not None:
-            await SheetApproval.add_approval_fields(ctx, sheet)
+    @commands.Cog.listener('on_raw_reaction_add')
+    async def check_for_approval(self, payload):
+        sheet: ToBeApproved = await self.sheet_from_emoji(payload)
+        if sheet is None:
+            return
+        if len(sheet.approvals) >= 2:
+            return
 
+        guild = self.bot.get_guild(payload.guild_id)
 
-    @staticmethod
-    async def add_approval_fields(ctx, sheet: ToBeApproved):
-        message = await sheet.get_message(ctx)
-        if message is not None:
-            embed = message.embeds[0]
-            embed.clear_fields()
-            if len(sheet.approvals) < 2:
-                embed.add_field(name='Approval ID', value=str(sheet.id))
-            for approval in sheet.approvals:
-                member = ctx.guild.get_member(approval)
-                embed.add_field(name='Approval!', value=f'You have been approved by {member.display_name}')
-            if len(sheet.approvals) >= 2:
-                embed.add_field(name='Approved!', value=f'You have been approved! '
-                                                        f'Contact a DM or Lord of the Sheet for more information.',
-                                inline=False)
-            await message.edit(embed=embed)
+        await sheet.add_approval(guild, payload.member)
+        await sheet.commit(self.bot.mdb['to_approve'])
 
-    async def remove_approval(self, ctx, sheet: ToBeApproved):
-        message = await sheet.get_message(ctx)
-        if ctx.author.id in sheet.approvals:
-            sheet.approvals.remove(ctx.author.id)
-            await self.bot.mdb['to_approve'].update_one({'id': sheet.id}, {'$set': sheet.to_dict()})
-        if message is not None:
-            await SheetApproval.add_approval_fields(ctx, sheet)
+    @commands.Cog.listener('on_raw_reaction_remove')
+    async def check_for_deny(self, payload):
+        sheet: ToBeApproved = await self.sheet_from_emoji(payload)
+        if sheet is None:
+            return
+
+        guild = self.bot.get_guild(payload.guild_id)
+        await sheet.remove_approval(guild, payload.user_id)
+        await sheet.commit(self.bot.mdb['to_approve'])
 
     @commands.command(name='sheet')
-    async def submit_sheet(self, ctx, *, content: str):
-        """
-        Sends a request for a sheet to be approved.
-        """
-
-        # Send Embed
+    @is_personal_server()
+    async def new_sheet(self, ctx, *, content: str):
         embed = create_default_embed(ctx)
         embed.title = f'Sheet Approval - {ctx.author.display_name}'
         embed.description = content
-        message = await ctx.send(embed=embed)
 
-        # Create ToBeApproved object
-        new_approval = ToBeApproved(message.id, [], content, ctx.author.id, ctx.channel.id)
-        await self.bot.mdb['to_approve'].insert_one(new_approval.to_dict())
+        if '(url)' in content:
+            return await ctx.author.send('You must include your *actual* sheet URL in the command, not `(url)`')
 
-        # Edit Message with Approval ID
-        embed.add_field(name='Approval ID', value=str(message.id))
-        await message.edit(embed=embed)
-        return
+        msg = await ctx.send(embed=embed)
 
-    @commands.command(name='approve')
-    @commands.has_any_role('DM', 'Lord of the Sheet')
-    async def approve_sheet_command(self, ctx, to_approve: int):
-        """
-        Adds an approval to a sheet
-        You must add the message ID as an argument.
-        """
-
-        # Get ToBeApproved object
-        approval: ToBeApproved = await self.get_sheet(ctx, to_approve)
-        if approval is None:
-            return
-        sheet_owner = ctx.guild.get_member(approval.owner_id)
-        # Sanity Checks
-        if ctx.author.id in approval.approvals:
-            return await ctx.send('You have already approved this sheet! You cannot approve it again.')
-        if ctx.author.id == approval.owner_id:
-            return await ctx.send('You cannot approve your own sheet!')
-        # Approve
-        approval.approvals.append(ctx.author.id)
-        if len(approval.approvals) >= 2:
-            await self.approve_sheet(ctx, approval)
-            return await ctx.send(f'Sheet has been fully approved! '
-                                  f'Contact the Sheet Owner ({sheet_owner.mention}) with approval details.')
-        else:
-            await self.add_approval(ctx, approval)
-            return await ctx.send('You have added your approval to the sheet!')
-
-    @commands.command(name='deny')
-    @commands.has_any_role('DM', 'Lord of the Sheet')
-    async def deny_sheet_command(self, ctx, to_deny: int):
-        """
-        Removes an approval from a sheet.
-        Must specify the sheet id as an argument.
-        """
-        sheet: ToBeApproved = await self.get_sheet(ctx, to_deny)
-        if sheet is None:
-            return
-        if ctx.author.id not in sheet.approvals:
-            return await ctx.send('You have not approved this sheet, so you cannot remove your approval.')
-        await self.remove_approval(ctx, sheet)
-        return await ctx.send('You have removed your approval from Sheet ID: '+str(sheet.id))
+        new_sheet = ToBeApproved(message_id=msg.id,
+                                 approvals=[],
+                                 channel_id=ctx.channel.id,
+                                 owner_id=ctx.author.id)
+        await self.bot.mdb['to_approve'].insert_one(new_sheet.to_dict())
 
 
 def setup(bot):
