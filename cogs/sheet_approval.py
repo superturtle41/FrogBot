@@ -91,7 +91,7 @@ class ToBeApproved:
         if len([role for role in member.roles if role.name == 'Player']) == 0:
             player_role = [role for role in guild.roles if role.name == 'Player'][0]
             if role := [role for role in member.roles if role.name == 'Commoner']:
-                await member.remove_role(role[0])
+                await member.remove_roles(role[0])
             await member.add_roles(player_role)
 
 
@@ -150,7 +150,7 @@ class SheetApproval(commands.Cog):
         await sheet.remove_approval(guild, payload.user_id)
         await sheet.commit(self.bot.mdb['to_approve'])
 
-    @commands.command(name='sheet')
+    @commands.command(name='sheet', aliases=['submit'])
     @is_personal_server()
     async def new_sheet(self, ctx, *, content: str):
         embed = create_default_embed(ctx)
