@@ -31,15 +31,14 @@ class Utility(commands.Cog):
         """
         Displays the current uptime of the bot.
         """
+        embed = create_default_embed(ctx)
+        embed.title = 'FrogBot Uptime'
         bot_up = time_to_readable(self.bot.uptime)
+        embed.add_field(name='Bot Uptime', value=f'{bot_up}')
         if ctx.bot.is_ready():
-            ready_up = time_to_readable(datetime.utcnow() - self.bot.ready_time)
-        else:
-            ready_up = None
-        out = f'Current Bot Uptime: {bot_up}'
-        if ready_up:
-            out += '\n'+f'Current Ready Uptime: {ready_up}'
-        return await ctx.send(out)
+            embed.add_field(name='Ready Uptime',
+                            value=f'{time_to_readable(datetime.utcnow() - self.bot.ready_time)}')
+        return await ctx.send(embed=embed)
 
     @commands.command(name='info', aliases=['stats', 'about'])
     async def info(self, ctx):

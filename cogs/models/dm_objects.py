@@ -1,13 +1,6 @@
-from discord import Member, CategoryChannel, Guild, TextChannel
+from discord import Member, CategoryChannel, Guild
+from utils.errors import InvalidArgument, CategoryExists
 from .dm_constants import *
-
-
-class InvalidArgument(Exception):
-    pass
-
-
-class CategoryExists(Exception):
-    pass
 
 
 class DMCategory:

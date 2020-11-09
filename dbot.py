@@ -11,7 +11,7 @@ from utils.context import Context as CustomContext
 from utils.functions import try_delete
 
 COGS = (
-    'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling',
+    'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling', 'cogs.custom_commands',
     'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
     'cogs.help'
 )
@@ -144,12 +144,17 @@ async def on_message(message):
     if message.author.id in bot.muted:
         return
 
-    await bot.process_commands(message)
+    context = await bot.get_context(message)
+    if context.command is not None:
+        return await bot.invoke(context)
+    else:
+        if 'CustomCommands' in bot.cogs and bot.is_ready():
+            await bot.cogs['CustomCommands'].run_custom_commands(context)
 
 
 @bot.event
 async def on_command(ctx):
-    if ctx.command.name == 'eval':
+    if ctx.command.name in ['py', 'pyi', 'sh']:
         return
 
     await try_delete(ctx.message)
