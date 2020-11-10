@@ -5,21 +5,24 @@ from discord.ext import menus
 
 from utils.errors import InvalidArgument
 from utils.checks import is_owner
+from utils.functions import create_default_embed
 
 log = logging.getLogger(__name__)
 
 
 class CommandMenu(menus.ListPageSource):
-    def __init__(self, data):
-        super().__init__(data, per_page=4)
+    def __init__(self, data, ctx):
+        super().__init__(data, per_page=20)
+        self.context = ctx
 
     async def format_page(self, menu, entries):
         offset = menu.current_page * self.per_page
+        embed = create_default_embed(self.context)
         message = '\n'.join([f':white_small_square: `{cc.name}`' for _, cc in enumerate(entries, start=offset)])
         if message == '':
             message = 'No custom commands found for this server'
-        message = '**Current Custom Commands for this Server**:\n' + message
-        return message
+        embed.description = '**Current Custom Commands for this Server**:\n' + message
+        return embed
 
 
 class CustomCommand:
@@ -96,7 +99,7 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
         Any of these commands require the "DM" or "Dragonspeaker" role.
         """
         aliases = await self.db.find({'guild_id': ctx.guild.id}).to_list(None)
-        source = CommandMenu(data=[CustomCommand.from_dict(a) for a in aliases])
+        source = CommandMenu(data=[CustomCommand.from_dict(a) for a in aliases], ctx=ctx)
         cc_list = menus.MenuPages(source=source, clear_reactions_after=True)
         await cc_list.start(ctx)
 
