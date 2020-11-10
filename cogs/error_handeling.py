@@ -13,7 +13,7 @@ import discord
 import traceback
 import sys
 from discord.ext import commands
-
+from utils.errors import InvalidArgument
 
 class CommandErrorHandler(commands.Cog):
 
@@ -69,6 +69,10 @@ class CommandErrorHandler(commands.Cog):
 
         elif isinstance(error, commands.BadArgument):
             msg = str(error) or "Unknown Bad Argument"
+            return await ctx.send(f'Error: {msg}')
+
+        elif isinstance(error, InvalidArgument):
+            msg = str(error) or "Unknown Invalid Argument"
             return await ctx.send(f'Error: {msg}')
 
         elif isinstance(error, commands.ArgumentParsingError):
