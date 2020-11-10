@@ -11,7 +11,7 @@ def is_owner():
 
 def is_authorized():
     async def predicate(ctx):
-        authorized = ctx.bot.mdb['authorized'].find_one({'_id': ctx.author.id})
+        authorized = await ctx.bot.mdb['authorized'].find_one({'_id': ctx.author.id})
         return authorized is not None
 
     return commands.check(predicate)
