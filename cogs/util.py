@@ -12,6 +12,9 @@ def time_to_readable(delta_uptime):
     return f"{days}d, {hours}h, {minutes}m, {seconds}s"
 
 
+DATE_FORMAT = '%A, %B %d, %Y at %I:%M:%S %p'
+
+
 class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -55,6 +58,28 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name='servinfo', aliases=['sinfo'])
+    async def server_info(self, ctx):
+        """
+        Displays information about the current server.
+        """
+        embed = create_default_embed(ctx)
+        guild = ctx.guild
+        embed.title = f'{guild.name} - Server Information'
+        general_info = f'**Name:** {guild.name}\n' \
+                       f'**Owner:** {guild.owner.mention}\n' \
+                       f'**Created:** {guild.created_at.strftime(DATE_FORMAT)}\n' \
+                       f'**Total Emojis:** {len(guild.emojis)}'
+        embed.add_field(name='General Info', value=general_info, inline=False)
+        bots = [member for member in guild.members if member.bot]
+        member_stats = f'**Total Members:** {guild.member_count}\n' \
+                       f'**Members:** {guild.member_count - len(bots)}\n' \
+                       f'**Bots:** {len(bots)}'
+        embed.add_field(name='Member Info', value=member_stats, inline=False)
+        embed.set_thumbnail(url=str(guild.icon_url))
+
+        return await ctx.send(embed=embed, allowed_mentions=None)
+
     @commands.command(name='say')
     async def say(self, ctx, *, repeat: str):
         """
@@ -66,7 +91,7 @@ class Utility(commands.Cog):
         return await ctx.send(out)
 
     @commands.command(name='avatar')
-    async def say(self, ctx, who: discord.Member = None):
+    async def avatar(self, ctx, who: discord.Member = None):
         """
         Gives you the avatar of whoever you specify, or yourself if you don't specify anyone.
         """
@@ -74,6 +99,17 @@ class Utility(commands.Cog):
         if who:
             url = who.avatar_url
         return await ctx.send(url)
+
+    @commands.command(name='source')
+    async def source(self, ctx):
+        """
+        Returns the link to the source code of the bot.
+        """
+        embed = create_default_embed(ctx)
+        embed.title = 'FrogBot Source'
+        embed.description = '[Click here for the Source Code.](https://github.com/1drturtle/FrogBot)'
+        embed.set_thumbnail(url=str(self.bot.user.avatar_url))
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

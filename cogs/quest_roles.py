@@ -9,6 +9,7 @@ class QuestRoles(commands.Cog):
         self.bot = bot
 
     @commands.command(name='questrole', description='Creates a role for quests')
+    @commands.bot_has_guild_permissions(manage_roles=True)
     async def create_quest_role(self, ctx):
         """
         Creates a Role for Quests
@@ -42,6 +43,10 @@ class QuestRoles(commands.Cog):
             else:
                 return False
 
+        async def stop(question_msg):
+            await try_delete(question_msg)
+            await ctx.send('Operation Cancelled, stopping.', delete_after=10)
+
         embed = create_default_embed(ctx)
         embed.title = 'Quest Role Creation'
         question_msg = await ctx.send(embed=embed)
@@ -49,12 +54,12 @@ class QuestRoles(commands.Cog):
                                         f'{ctx.author.mention}, what would you like this role to be called?',
                                         mentions=user_mention)
         if check_stop(role_name):
-            return
+            return await stop(question_msg)
 
         role_color, embed = await prompt(question_msg, embed,
                                          f'Role Name: `{role_name}`\nWhat color would you like this role to be?')
         if check_stop(role_color):
-            return
+            return await stop(question_msg)
         try:
             color = await color_converter.convert(ctx=ctx, argument=role_color.lower())
         except (commands.CommandError, commands.BadColourArgument):
@@ -72,7 +77,7 @@ class QuestRoles(commands.Cog):
                            allowed_mentions=discord.AllowedMentions(roles=[new_role]))
             return await try_delete(question_msg)
         else:
-            return await ctx.send('Operation Cancelled, stopping.')
+            return await stop(question_msg)
 
 
 def setup(bot):
