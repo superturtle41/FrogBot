@@ -66,16 +66,27 @@ class Utility(commands.Cog):
         embed = create_default_embed(ctx)
         guild = ctx.guild
         embed.title = f'{guild.name} - Server Information'
-        general_info = f'**Name:** {guild.name}\n' \
+        general_info = f'**ID:** {guild.id}\n' \
                        f'**Owner:** {guild.owner.mention}\n' \
-                       f'**Created:** {guild.created_at.strftime(DATE_FORMAT)}\n' \
-                       f'**Total Emojis:** {len(guild.emojis)}'
+                       f'Created: {guild.created_at.strftime(DATE_FORMAT)}'
         embed.add_field(name='General Info', value=general_info, inline=False)
+        emoji_x = 0
+        emojis = []
+        for emoji in guild.emojis:
+            emoji_x += 1
+            if emoji_x >= 10:
+                break
+            emojis.append(emoji)
+        emoji_info = f'{len(guild.emojis)} emoji{"s" if len(guild.emojis) != 1 else ""}\n' \
+                     f'{",".join([str(e) for e in emojis])} {"..." if emoji_x >= 10 else ""}'
+        embed.add_field(name='Emojis', value=emoji_info, inline=False)
         bots = [member for member in guild.members if member.bot]
-        member_stats = f'**Total Members:** {guild.member_count}\n' \
-                       f'**Members:** {guild.member_count - len(bots)}\n' \
-                       f'**Bots:** {len(bots)}'
-        embed.add_field(name='Member Info', value=member_stats, inline=False)
+        member_stats = f'{guild.member_count - len(bots)} members ({len(bots)} bots)'
+        embed.add_field(name='Member Info', value=member_stats)
+        channels = f'{len([c for c in guild.categories])} categories, ' \
+                   f'{len([c for c in guild.channels if isinstance(c, discord.TextChannel)])} text channels,' \
+                   f'{len([c for c in guild.channels if isinstance(c, discord.VoiceChannel)])} voice channels.'
+        embed.add_field(name='Channel Info', value=channels)
         embed.set_thumbnail(url=str(guild.icon_url))
 
         return await ctx.send(embed=embed, allowed_mentions=None)
