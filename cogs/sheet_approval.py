@@ -1,7 +1,10 @@
 from discord.ext import commands
-from utils.functions import create_default_embed, try_delete
-from utils.checks import is_personal_server
+from utils.functions import create_default_embed
+from utils.checks import is_personal_server, is_owner
 import discord
+import logging
+
+log = logging.getLogger('sheet approval')
 
 
 class ToBeApproved:
@@ -167,6 +170,31 @@ class SheetApproval(commands.Cog):
                                  channel_id=ctx.channel.id,
                                  owner_id=ctx.author.id)
         await self.bot.mdb['to_approve'].insert_one(new_sheet.to_dict())
+
+    @commands.command('cleanup_sheets')
+    @is_personal_server()
+    @is_owner()
+    async def remove_sheets(self, ctx):
+        db = self.bot.mdb['to_approve']
+
+        embed = create_default_embed(ctx)
+        embed.title = f'Pruning Old Sheets from Database.'
+        all_sheets = await db.find().to_list(None)
+        log.info(str(all_sheets))
+        count = 0
+        for sheet in all_sheets:
+            sheet.pop('_id')
+            sheet = ToBeApproved.from_dict(sheet)
+            channel = ctx.guild.get_channel(sheet.channel_id)
+            if channel is None:
+                continue
+            try:
+                msg = await channel.fetch_message(sheet.message_id)
+            except discord.NotFound:
+                count += 1
+                await db.delete_one({'message_id': sheet.message_id})
+        embed.description = f'Pruned {count} Sheet{"s" if count != 1 else ""} from the DB.'
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
