@@ -78,10 +78,8 @@ class Admin(commands.Cog):
         else:
             return await ctx.send('Guild not found.')
 
-    # ---- Authorized-Only Commands ----
-
     @commands.command(name='mute', description='Mutes a user. Prevents them from using the bot.', hidden=True)
-    @is_authorized()
+    @is_owner()
     async def mute(self, ctx, to_mute: discord.Member):
         record = {'_id': to_mute.id}
         db = self.bot.mdb['muted_clients']
@@ -94,7 +92,7 @@ class Admin(commands.Cog):
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has already been muted.')
 
     @commands.command(name='unmute', description='Un-mutes a user.', hidden=True)
-    @is_authorized()
+    @is_owner()
     async def unmute(self, ctx, to_mute: discord.Member):
         record = {'_id': to_mute.id}
         db = self.bot.mdb['muted_clients']
