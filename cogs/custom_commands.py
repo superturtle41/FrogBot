@@ -93,6 +93,7 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
     async def cc_base(self, ctx):
         """
         Base command for CustomCommand commands. Will list any custom commands for this server.
+        Any of these commands require the "DM" or "Dragonspeaker" role.
         """
         aliases = await self.db.find({'guild_id': ctx.guild.id}).to_list(None)
         source = CommandMenu(data=[CustomCommand.from_dict(a) for a in aliases])
