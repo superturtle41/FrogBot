@@ -59,6 +59,7 @@ class Utility(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='servinfo', aliases=['sinfo'])
+    @commands.guild_only()
     async def server_info(self, ctx):
         """
         Displays information about the current server.
