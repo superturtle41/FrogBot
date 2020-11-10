@@ -84,7 +84,7 @@ class Utility(commands.Cog):
         member_stats = f'{guild.member_count - len(bots)} members ({len(bots)} bots)'
         embed.add_field(name='Member Info', value=member_stats)
         channels = f'{len([c for c in guild.categories])} categories, ' \
-                   f'{len([c for c in guild.channels if isinstance(c, discord.TextChannel)])} text channels,' \
+                   f'{len([c for c in guild.channels if isinstance(c, discord.TextChannel)])} text channels, ' \
                    f'{len([c for c in guild.channels if isinstance(c, discord.VoiceChannel)])} voice channels.'
         embed.add_field(name='Channel Info', value=channels)
         embed.set_thumbnail(url=str(guild.icon_url))
