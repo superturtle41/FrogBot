@@ -180,7 +180,6 @@ class SheetApproval(commands.Cog):
         embed = create_default_embed(ctx)
         embed.title = f'Pruning Old Sheets from Database.'
         all_sheets = await db.find().to_list(None)
-        log.info(str(all_sheets))
         count = 0
         for sheet in all_sheets:
             sheet.pop('_id')
