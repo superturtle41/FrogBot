@@ -4,15 +4,21 @@ async-timeout==3.0.1
 attrs==20.2.0
 braceexpand==0.1.6
 chardet==3.0.4
+click==7.1.2
 discord-ext-menus @ git+https://github.com/Rapptz/discord-ext-menus@6f2b873bf0d28903eb752aa1166b3aac26dc9007
 discord.py==1.5.1
 dnspython==2.0.0
+Flask==1.1.2
 humanize==3.1.0
 idna==2.10
 import-expression==1.1.4
+itsdangerous==1.1.0
+Jinja2==2.11.2
 jishaku==1.19.2.202
+MarkupSafe==1.1.1
 motor==2.3.0
 multidict==4.7.6
 pymongo==3.11.0
 six==1.15.0
+Werkzeug==1.0.1
 yarl==1.5.1

@@ -10,6 +10,8 @@ import bot_config as config
 from utils.context import Context as CustomContext
 from utils.functions import try_delete
 
+import keep_alive
+
 COGS = (
     'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling', 'cogs.custom_commands',
     'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
@@ -174,4 +176,5 @@ for cog in COGS:
 
 if __name__ == '__main__':
     db_update.start()
+    keep_alive.keep_alive()
     bot.run(config.TOKEN)
