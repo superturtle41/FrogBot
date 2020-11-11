@@ -7,7 +7,7 @@ braceexpand==0.1.6
 certifi==2020.11.8
 chardet==3.0.4
 click==7.1.2
-discord-ext-menus==1.0.0a27+g6f2b873
+git+https://github.com/Rapptz/discord-ext-menus
 discord.py==1.5.1
 dnspython==2.0.0
 Flask==1.1.2

@@ -1,6 +1,6 @@
 FROM python:latest
 
-WORKDIR /mybot
+WORKDIR /frogbot
 
 COPY . .
 RUN pip install -r requirements.txt
