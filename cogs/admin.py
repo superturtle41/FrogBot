@@ -68,7 +68,7 @@ class Admin(commands.Cog):
         """
         Leaves the specified guild
         """
-        to_leave = await self.bot.get_guild(guild_id)
+        to_leave = self.bot.get_guild(guild_id)
         if to_leave is not None:
             await ctx.send(f'Leaving Guild: `{to_leave.name}`')
             try:
