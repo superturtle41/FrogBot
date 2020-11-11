@@ -3,14 +3,14 @@ import logging
 import sys
 
 import discord
-from discord.ext import commands, tasks
 import motor.motor_asyncio
+from discord.ext import commands, tasks
 
 import bot_config as config
 from utils.context import Context as CustomContext
 from utils.functions import try_delete
 
-import keep_alive
+import sentry_sdk
 
 COGS = (
     'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling', 'cogs.custom_commands',
@@ -46,6 +46,7 @@ class FrogBot(commands.Bot):
         self.muted = set()
         self.prefixes = dict()
         self.personal_server = None
+        self.sentry_url = config.SENTRY_URL
         super(FrogBot, self).__init__(command_prefix, description=desc, **options)
 
     @property
@@ -175,6 +176,9 @@ for cog in COGS:
     bot.load_extension(cog)
 
 if __name__ == '__main__':
+
+    if config.SENTRY_URL is not None:
+        bot.sentry = sentry_sdk.init(config.SENTRY_URL, traces_sample_rate=1)
+
     db_update.start()
-    keep_alive.keep_alive()
     bot.run(config.TOKEN)

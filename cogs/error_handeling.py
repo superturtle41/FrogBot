@@ -15,10 +15,29 @@ import sys
 from discord.ext import commands
 from utils.errors import InvalidArgument
 
+import sentry_sdk
+
+
 class CommandErrorHandler(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    def log_error(self, error=None, context=None):
+        # https://github.com/avrae/avrae/blob/master/dbot.py#L114
+        if self.bot.sentry_url is None:
+            return
+
+        with sentry_sdk.push_scope() as scope:
+            scope.user = {"id": context.author.id, "username": str(context.author)}
+            scope.set_tag("message.content", context.message.content)
+            scope.set_tag("is_private_message", context.guild is None)
+            scope.set_tag("channel.id", context.channel.id)
+            scope.set_tag("channel.name", str(context.channel))
+            if context.guild_id is not None:
+                scope.set_tag("guild.id", context.guild_id)
+                scope.set_tag("guild.name", str(context.guild))
+            sentry_sdk.capture_exception(error)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -93,6 +112,7 @@ class CommandErrorHandler(commands.Cog):
             # All other Errors not returned come here. And we can just print the default TraceBack.
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+            self.log_error(error, context=ctx)
 
 
 def setup(bot):
