@@ -68,11 +68,11 @@ class Admin(commands.Cog):
         """
         Leaves the specified guild
         """
-        to_leave = self.bot.get_guild(guild_id)
+        to_leave: discord.Guild = self.bot.get_guild(guild_id)
         if to_leave is not None:
             await ctx.send(f'Leaving Guild: `{to_leave.name}`')
             try:
-                await self.bot.leave(to_leave)
+                await to_leave.leave()
             except discord.HTTPException:
                 pass
         else:
