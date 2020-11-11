@@ -26,7 +26,6 @@ class Utility(commands.Cog):
         """
         now = datetime.now()
         message = await ctx.send('Ping!')
-        print(1/0)
         await message.edit(content=f'Pong!\nBot: {int(ctx.bot.latency*1000)} ms\n'
                                    f'Discord: {int((datetime.now() - now).total_seconds()*1000)} ms')
 
