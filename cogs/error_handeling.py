@@ -16,6 +16,9 @@ from discord.ext import commands
 from utils.errors import InvalidArgument
 
 import sentry_sdk
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class CommandErrorHandler(commands.Cog):
@@ -26,6 +29,7 @@ class CommandErrorHandler(commands.Cog):
     def log_error(self, error=None, context=None):
         # https://github.com/avrae/avrae/blob/master/dbot.py#L114
         if self.bot.sentry_url is None:
+            log.warning('SENTRY Error Handling is not setup.')
             return
 
         with sentry_sdk.push_scope() as scope:
@@ -38,6 +42,7 @@ class CommandErrorHandler(commands.Cog):
                 scope.set_tag("guild.id", context.guild_id)
                 scope.set_tag("guild.name", str(context.guild))
             sentry_sdk.capture_exception(error)
+            log.info('Error logged to SENTRY')
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -110,9 +115,9 @@ class CommandErrorHandler(commands.Cog):
 
         else:
             # All other Errors not returned come here. And we can just print the default TraceBack.
+            self.log_error(error, context=ctx)
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-            self.log_error(error, context=ctx)
 
 
 def setup(bot):
