@@ -57,10 +57,11 @@ class ToBeApproved:
                                   f' and then go to <#608030916778000395> and do the pinned commands for your sheet!',
                             inline=False)
             general = guild.get_channel(607371291636400130)
-            await general.send(f'{mention.mention}, your character with the following content has been approved:\n'
-                               f'```\n{embed.description}\n```\n'
-                               f'Check your submission in <#607374590146117653> for details on what to do next.',
-                               allowed_mentions=discord.AllowedMentions(users=[mention]))
+            if general is not None:
+                await general.send(f'{mention.mention}, your character with the following content has been approved:\n'
+                                   f'```\n{embed.description}\n```\n'
+                                   f'Check your submission in <#607374590146117653> for details on what to do next.',
+                                   allowed_mentions=discord.AllowedMentions(users=[mention]))
         await message.edit(embed=embed)
 
     async def add_approval(self, guild, approver):
@@ -87,15 +88,17 @@ class ToBeApproved:
         if len(self.approvals) < 2:
             return
         await self.fields(guild)
-        # Ping them with stuff to do
-
-        # Add Player role to user if they don't already have it.
         member = guild.get_member(self.owner_id)
-        if len([role for role in member.roles if role.name == 'Player']) == 0:
-            player_role = [role for role in guild.roles if role.name == 'Player'][0]
-            if role := [role for role in member.roles if role.name == 'Commoner']:
-                await member.remove_roles(role[0])
-            await member.add_roles(player_role)
+        if member is None:
+            return None
+        # Add Player Role
+        player_role = next((role for role in guild.roles if role.name == 'Player'), None)
+        if player_role not in member.roles and player_role is not None:
+            await member.add_roles(player_role, reason='Approved.')
+        # Remove Commoner Role
+        commoner_role = next((role for role in member.roles if role.name == 'Commoner'), None)
+        if commoner_role is not None:
+            await member.remove_roles(commoner_role, reason='Approved.')
 
 
 APPROVAL_ROLES = ('DM', 'Lord of the Sheet')
