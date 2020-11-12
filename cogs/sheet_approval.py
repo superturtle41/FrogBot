@@ -156,12 +156,18 @@ class SheetApproval(commands.Cog):
     @commands.command(name='sheet', aliases=['submit'])
     @is_personal_server()
     async def new_sheet(self, ctx, *, content: str):
+        """
+        Adds a sheet to be approved
+        """
         embed = create_default_embed(ctx)
         embed.title = f'Sheet Approval - {ctx.author.display_name}'
         embed.description = content
 
         if '(url)' in content:
             return await ctx.author.send('You must include your *actual* sheet URL in the command, not `(url)`')
+
+        if (ctx.channel.id != 607374590146117653) and not (ctx.guild.id == 755202524859859004):
+            return await ctx.send('This channel is not valid for submitting sheets.')
 
         msg = await ctx.send(embed=embed)
 
@@ -175,6 +181,9 @@ class SheetApproval(commands.Cog):
     @is_personal_server()
     @is_owner()
     async def remove_sheets(self, ctx):
+        """
+        Removes deleted sheets from database. Owner only.
+        """
         db = self.bot.mdb['to_approve']
 
         embed = create_default_embed(ctx)
@@ -188,7 +197,7 @@ class SheetApproval(commands.Cog):
             if channel is None:
                 continue
             try:
-                msg = await channel.fetch_message(sheet.message_id)
+                await channel.fetch_message(sheet.message_id)
             except discord.NotFound:
                 count += 1
                 await db.delete_one({'message_id': sheet.message_id})

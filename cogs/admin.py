@@ -8,17 +8,25 @@ class Admin(commands.Cog):
         self.bot = bot
 
     # ---- Bot Owner Commands ----
-    @commands.command(name="stop", description="Owner Only - Stops Bot", hidden=True)
+    @commands.group(name='admin', invoke_without_command=True)
+    @is_owner()
+    async def admin(self, ctx):
+        """
+        Owner only commands for the bot.
+        """
+        await ctx.send('give a subcommand nerd')
+
+    @admin.command(name="stop", description="Owner Only - Stops Bot")
     @is_owner()
     async def stop(self, ctx, really: str = "no"):
         await ctx.send("Okay, shutting down...")
         if really == 'please':
             await ctx.send('Shutdown complete.')
-            exit(0)
+            await self.bot.logout()
         else:
             await ctx.send('Invalid Control Sequence detected. Operation Aborted.')
 
-    @commands.command(name='change_status', description='Owner Only - Changes the bot\'s status.', hidden=True)
+    @admin.command(name='change_status', description='Owner Only - Changes the bot\'s status.')
     @is_owner()
     async def change_status(self, ctx, *, value: str):
         if value != 'reset':
@@ -30,7 +38,7 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'Status changed to {value}' if value != 'reset' else 'Status Reset.')
 
-    @commands.command(name='set_server', hidden=True)
+    @admin.command(name='set_server')
     @is_owner()
     async def set_personal_server(self, ctx, guild_id: int):
         await ctx.bot.mdb['bot_settings'].update_one({'setting': 'personal_server'},
@@ -41,7 +49,7 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'Set {guild_id} to personal server.')
 
-    @commands.command(name='authorize', description='Add user to authorized list.', hidden=True)
+    @admin.command(name='authorize', description='Add user to authorized list.')
     @is_owner()
     async def authorize_add(self, ctx, to_auth: discord.Member):
         uid = to_auth.id
@@ -49,9 +57,9 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'User {ctx.author.display_name} added to authorized list.')
 
-    @commands.command(name='ban', hidden=True)
+    @admin.command(name='ban')
     @commands.guild_only()
-    @commands.check_any(is_owner(), commands.has_guild_permissions(ban_members=True))
+    @is_owner()
     async def manual_ban(self, ctx, to_ban: discord.Member, hard: bool = False):
         try:
             if hard:
@@ -63,7 +71,8 @@ class Admin(commands.Cog):
         except discord.HTTPException:
             return await ctx.author.dm_channel.send('An unknown discord error occurred. Pleas try again later.')
 
-    @commands.command(name='leave', hidden=True)
+    @admin.command(name='leave')
+    @is_owner()
     async def leave_guild(self, ctx, guild_id: int):
         """
         Leaves the specified guild
@@ -78,7 +87,7 @@ class Admin(commands.Cog):
         else:
             return await ctx.send('Guild not found.')
 
-    @commands.command(name='mute', description='Mutes a user. Prevents them from using the bot.', hidden=True)
+    @admin.command(name='mute', description='Mutes a user. Prevents them from using the bot.')
     @is_owner()
     async def mute(self, ctx, to_mute: discord.Member):
         record = {'_id': to_mute.id}
@@ -91,7 +100,7 @@ class Admin(commands.Cog):
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has already been muted.')
 
-    @commands.command(name='unmute', description='Un-mutes a user.', hidden=True)
+    @commands.command(name='unmute', description='Un-mutes a user.')
     @is_owner()
     async def unmute(self, ctx, to_mute: discord.Member):
         record = {'_id': to_mute.id}
