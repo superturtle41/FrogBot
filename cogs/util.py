@@ -99,7 +99,7 @@ class Utility(commands.Cog):
         """
         out = repeat
         if ctx.author.id != self.bot.owner:
-            out.prepend(f'{ctx.author.display_name}: ')
+            out = f'{ctx.author.display_name}: ' + repeat
         return await ctx.send(out)
 
     @commands.command(name='avatar')
