@@ -19,6 +19,9 @@ class Admin(commands.Cog):
     @admin.command(name="stop", description="Owner Only - Stops Bot")
     @is_owner()
     async def stop(self, ctx, really: str = "no"):
+        """
+        Shuts down the bot.
+        """
         await ctx.send("Okay, shutting down...")
         if really == 'please':
             await ctx.send('Shutdown complete.')
@@ -29,6 +32,9 @@ class Admin(commands.Cog):
     @admin.command(name='change_status', description='Owner Only - Changes the bot\'s status.')
     @is_owner()
     async def change_status(self, ctx, *, value: str):
+        """
+        Changes the bot's status. Will reset if `reset` is passed.
+        """
         if value != 'reset':
             await ctx.bot.mdb['bot_settings'].update_one({'setting': 'status'},
                                                          {'$set': {'status': value}}, upsert=True)
@@ -41,6 +47,9 @@ class Admin(commands.Cog):
     @admin.command(name='set_server')
     @is_owner()
     async def set_personal_server(self, ctx, guild_id: int):
+        """
+        Sets the bot's personal server. This is the server where SheetApproval works.
+        """
         await ctx.bot.mdb['bot_settings'].update_one({'setting': 'personal_server'},
                                                      {'$set': {'server_id': guild_id}},
                                                      upsert=True
@@ -52,6 +61,9 @@ class Admin(commands.Cog):
     @admin.command(name='authorize', description='Add user to authorized list.')
     @is_owner()
     async def authorize_add(self, ctx, to_auth: discord.Member):
+        """
+        Adds a user to the bot's authorized list.
+        """
         uid = to_auth.id
         await ctx.bot.mdb['authorized'].update_one({'_id': uid}, {'$set': {'_id': uid}}, upsert=True)
 
@@ -61,6 +73,9 @@ class Admin(commands.Cog):
     @commands.guild_only()
     @is_owner()
     async def manual_ban(self, ctx, to_ban: discord.Member, hard: bool = False):
+        """
+        Bans a member from the server.
+        """
         try:
             if hard:
                 await ctx.guild.kick(to_ban)
@@ -90,6 +105,9 @@ class Admin(commands.Cog):
     @admin.command(name='mute', description='Mutes a user. Prevents them from using the bot.')
     @is_owner()
     async def mute(self, ctx, to_mute: discord.Member):
+        """
+        Mutes a user from the bot.
+        """
         record = {'_id': to_mute.id}
         db = self.bot.mdb['muted_clients']
         muted = await db.find_one(record)
@@ -100,9 +118,12 @@ class Admin(commands.Cog):
         else:
             return await ctx.send(f'User {to_mute.name}#{to_mute.discriminator} has already been muted.')
 
-    @commands.command(name='unmute', description='Un-mutes a user.')
+    @admin.command(name='unmute', description='Un-mutes a user.')
     @is_owner()
     async def unmute(self, ctx, to_mute: discord.Member):
+        """
+        Unmutes a user from the bot.
+        """
         record = {'_id': to_mute.id}
         db = self.bot.mdb['muted_clients']
         muted = await db.find_one(record)
