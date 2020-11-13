@@ -45,7 +45,11 @@ class FrogBot(commands.Bot):
         self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = set()
         self.prefixes = dict()
-        self.personal_server = None
+        self.personal_server = {
+            'server_id': None,
+            'sheet_channel': None,
+            'general_channel': None
+        }
         self.sentry_url = config.SENTRY_URL
         super(FrogBot, self).__init__(command_prefix, description=desc, **options)
 
@@ -123,8 +127,8 @@ async def on_ready():
 async def db_update():
     result = await bot.mdb['bot_settings'].find_one({'setting': 'personal_server'})
     if result is not None:
-        result = result['server_id']
-    bot.personal_server = result
+        for key in ['server_id', 'sheet_channel', 'general_channel']:
+            bot.personal_server[key] = result.get(key, None)
 
     await bot.mdb['authorized'].update_one({'_id': bot.owner}, {'$set': {'_id': bot.owner}}, upsert=True)
 
