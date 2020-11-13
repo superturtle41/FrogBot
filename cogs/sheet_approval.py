@@ -172,7 +172,7 @@ class SheetApproval(commands.Cog):
             return await ctx.author.send('You must include your *actual* sheet URL in the command, not `(url)`')
 
         # If not character-submission or FrogBot dev
-        if (ctx.channel.id != 607374590146117653) and not (ctx.guild.id == 755202524859859004):
+        if (ctx.channel.id != self.bot.personal_server['sheet_channel']) and not (ctx.guild.id == 755202524859859004):
             return await ctx.send('This channel is not valid for submitting sheets.')
 
         msg = await ctx.send(embed=embed)
