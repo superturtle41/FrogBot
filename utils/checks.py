@@ -19,8 +19,8 @@ def is_authorized():
 
 def is_personal_server():
     async def predicate(ctx):
-        if ctx.bot.personal_server is None:
+        if ctx.bot.personal_server['server_id'] is None:
             return False
-        return ctx.guild_id == ctx.bot.personal_server
+        return ctx.guild_id == ctx.bot.personal_server['server_id']
 
     return commands.check(predicate)

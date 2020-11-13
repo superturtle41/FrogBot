@@ -83,6 +83,36 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'Set {guild_id} to personal server.')
 
+    @personal_server.command(name='set_sheet_channel', aliases=['ssc'])
+    @is_owner()
+    async def set_personal_sheet_channel(self, ctx, channel: discord.TextChannel):
+        """
+        Sets the sheet channel for the bot's personal server.
+        """
+        await ctx.bot.mdb['bot_settings'].update_one({'setting': 'personal_server'},
+                                                     {'$set': {'sheet_channel': channel.id}},
+                                                     upsert=True
+                                                     )
+
+        self.bot.personal_server['sheet_channel'] = channel.id
+
+        return await ctx.send(f'Set {channel} to sheet channel.')
+
+    @personal_server.command(name='set_general_channel', aliases=['sgc'])
+    @is_owner()
+    async def set_personal_general_channel(self, ctx, channel: discord.TextChannel):
+        """
+        Sets the general channel for the bot's personal server.
+        """
+        await ctx.bot.mdb['bot_settings'].update_one({'setting': 'personal_server'},
+                                                     {'$set': {'general_channel': channel.id}},
+                                                     upsert=True
+                                                     )
+
+        self.bot.personal_server['general_channel'] = channel.id
+
+        return await ctx.send(f'Set {channel} to sheet channel.')
+
     @admin.command(name='authorize', description='Add user to authorized list.')
     @is_owner()
     async def authorize_add(self, ctx, to_auth: discord.Member):
