@@ -1,6 +1,7 @@
 from discord.ext import commands
-from utils.checks import is_owner, is_authorized
+from utils.checks import is_owner
 import discord
+from utils.functions import create_default_embed
 
 
 class Admin(commands.Cog):
@@ -44,7 +45,31 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'Status changed to {value}' if value != 'reset' else 'Status Reset.')
 
-    @admin.command(name='set_server')
+    @admin.group(name='personal_server', aliases=['ps'], invoke_without_command=True)
+    @is_owner()
+    async def personal_server(self, ctx):
+        """
+        Base command for personal server commands.
+
+        Displays information about currently set personal server.
+        """
+        if self.bot.personal_server['server_id'] is None:
+            return await ctx.send('Personal Server not set, no information available.')
+        personal_server = self.bot.get_guild(self.bot.personal_server['server_id'])
+        sheet_channel = personal_server.get_channel(self.bot.personal_server['sheet_channel']) \
+            if self.bot.personal_server['sheet_channel'] is not None else 'Not set.'
+        general_channel = personal_server.get_channel(self.bot.personal_server['general_channel']) \
+            if self.bot.personal_server['general_channel'] is not None else 'Not set.'
+
+        embed = create_default_embed(ctx)
+        embed.title = 'FrogBot Personal Server Information'
+        embed.add_field(name='Server Info', value=f'Server ID: {personal_server.id}\n'
+                                                  f'Server Name: {personal_server.name}')
+        embed.add_field(name='Channel Info', value=f'Sheet Channel: {sheet_channel}\n'
+                                                   f'General Channel: {general_channel}')
+        await ctx.send(embed=embed)
+
+    @personal_server.command(name='set_server', aliases=['ss'])
     @is_owner()
     async def set_personal_server(self, ctx, guild_id: int):
         """
@@ -54,7 +79,7 @@ class Admin(commands.Cog):
                                                      {'$set': {'server_id': guild_id}},
                                                      upsert=True
                                                      )
-        self.bot.personal_server = guild_id
+        self.bot.personal_server['server_id'] = guild_id
 
         return await ctx.send(f'Set {guild_id} to personal server.')
 

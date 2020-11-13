@@ -45,7 +45,11 @@ class FrogBot(commands.Bot):
         self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = set()
         self.prefixes = dict()
-        self.personal_server = None
+        self.personal_server = {
+            'server_id': None,
+            'sheet_channel': None,
+            'general_channel': None
+        }
         self.sentry_url = config.SENTRY_URL
         super(FrogBot, self).__init__(command_prefix, description=desc, **options)
 
