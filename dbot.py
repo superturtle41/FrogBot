@@ -127,8 +127,8 @@ async def on_ready():
 async def db_update():
     result = await bot.mdb['bot_settings'].find_one({'setting': 'personal_server'})
     if result is not None:
-        result.pop('_id')
-        bot.personal_server = result
+        for key in ['server_id', 'sheet_channel', 'general_channel']:
+            bot.personal_server[key] = result.get(key, None)
 
     await bot.mdb['authorized'].update_one({'_id': bot.owner}, {'$set': {'_id': bot.owner}}, upsert=True)
 
