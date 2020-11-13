@@ -4,6 +4,12 @@ import discord
 from utils.functions import create_default_embed
 
 
+def channel_id_to_link(channel_id):
+    if isinstance(channel_id, discord.TextChannel):
+        channel_id = channel_id.id
+    return f'<#{channel_id}>'
+
+
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -56,9 +62,9 @@ class Admin(commands.Cog):
         if self.bot.personal_server['server_id'] is None:
             return await ctx.send('Personal Server not set, no information available.')
         personal_server = self.bot.get_guild(self.bot.personal_server['server_id'])
-        sheet_channel = personal_server.get_channel(self.bot.personal_server['sheet_channel']) \
+        sheet_channel = channel_id_to_link(personal_server.get_channel(self.bot.personal_server['sheet_channel'])) \
             if self.bot.personal_server['sheet_channel'] is not None else 'Not set.'
-        general_channel = personal_server.get_channel(self.bot.personal_server['general_channel']) \
+        general_channel = channel_id_to_link(personal_server.get_channel(self.bot.personal_server['general_channel'])) \
             if self.bot.personal_server['general_channel'] is not None else 'Not set.'
 
         embed = create_default_embed(ctx)
@@ -96,7 +102,7 @@ class Admin(commands.Cog):
 
         self.bot.personal_server['sheet_channel'] = channel.id
 
-        return await ctx.send(f'Set {channel} to sheet channel.')
+        return await ctx.send(f'Set <#{channel.id}> to sheet channel.')
 
     @personal_server.command(name='set_general_channel', aliases=['sgc'])
     @is_owner()
@@ -111,7 +117,7 @@ class Admin(commands.Cog):
 
         self.bot.personal_server['general_channel'] = channel.id
 
-        return await ctx.send(f'Set {channel} to sheet channel.')
+        return await ctx.send(f'Set <#{channel.id}> to sheet channel.')
 
     @admin.command(name='authorize', description='Add user to authorized list.')
     @is_owner()
