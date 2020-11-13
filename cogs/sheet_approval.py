@@ -56,7 +56,9 @@ class ToBeApproved:
                                   f'Go to <#707974596816535553> and grab your player roles,'
                                   f' and then go to <#608030916778000395> and do the pinned commands for your sheet!',
                             inline=False)
-            general = guild.get_channel(607371291636400130)
+            general = None
+            if self.bot.personal_server['general_channel'] is not None:
+                general = guild.get_channel(self.bot.personal_server['general_channel'])
             if general is not None:
                 await general.send(f'{mention.mention}, your character with the following content has been approved:\n'
                                    f'```\n{embed.description}\n```\n'
