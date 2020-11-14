@@ -1,6 +1,6 @@
 FROM python:latest
 
-RUN sudo apt-get install -y procinfo
+RUN apt-get install -y procinfo
 
 WORKDIR /frogbot
 
