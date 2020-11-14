@@ -6,6 +6,7 @@ from discord.ext import menus
 from utils.errors import InvalidArgument
 from utils.checks import is_owner
 from utils.functions import create_default_embed
+from utils.constants import BOT_MODS
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
         await cc_list.start(ctx)
 
     @cc_base.command(name='create')
-    @commands.check_any(commands.has_any_role('DM', 'Dragonspeaker'), is_owner())
+    @commands.check_any(commands.has_any_role(BOT_MODS), is_owner())
     async def cc_create(self, ctx, name: str, *, content: str):
         """
         Create a new Custom Command.
@@ -119,7 +120,7 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
         return await ctx.send(f'Created new command with name `{new_cc.name}`')
 
     @cc_base.command(name='delete')
-    @commands.check_any(commands.has_any_role('DM', 'Dragonspeaker'), is_owner())
+    @commands.check_any(commands.has_any_role(BOT_MODS), is_owner())
     async def cc_delete(self, ctx, name: str):
         """
         Deletes a Custom Counter. The name must be an existing CC.
