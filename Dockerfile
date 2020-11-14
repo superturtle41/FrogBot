@@ -1,4 +1,7 @@
-FROM python:latest
+FROM python:3.8.6-buster
+
+RUN apt update
+RUN apt install procinfo
 
 WORKDIR /frogbot
 
