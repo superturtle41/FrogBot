@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ext import menus
 
 from utils.errors import InvalidArgument
-from utils.checks import is_owner, is_authorized
+from utils.checks import is_owner
 from utils.functions import create_default_embed
 
 log = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
         return await ctx.send(cc.content)
 
     @commands.group(name='cc', invoke_without_command=True)
-    @commands.check_any(commands.has_any_role('DM', 'Dragonspeaker'), is_authorized())
+    @commands.check_any(commands.has_any_role('DM', 'Dragonspeaker'), is_owner())
     async def cc_base(self, ctx):
         """
         Base command for CustomCommand commands. Will list any custom commands for this server.

@@ -9,14 +9,6 @@ def is_owner():
     return commands.check(predicate)
 
 
-def is_authorized():
-    async def predicate(ctx):
-        authorized = await ctx.bot.mdb['authorized'].find_one({'_id': ctx.author.id})
-        return authorized is not None
-
-    return commands.check(predicate)
-
-
 def is_personal_server():
     async def predicate(ctx):
         if ctx.bot.personal_server['server_id'] is None:
