@@ -148,6 +148,9 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    if not bot.is_ready():
+        return
+
     if message.author.id in bot.muted:
         return
 
@@ -155,7 +158,7 @@ async def on_message(message):
     if context.command is not None:
         return await bot.invoke(context)
     else:
-        if 'CustomCommands' in bot.cogs and bot.is_ready():
+        if 'CustomCommands' in bot.cogs:
             await bot.cogs['CustomCommands'].run_custom_commands(context)
 
 
