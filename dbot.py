@@ -14,7 +14,7 @@ import sentry_sdk
 
 COGS = (
     'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling', 'cogs.custom_commands',
-    'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval', 'cogs.afk'
+    'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval', 'cogs.afk',
     'cogs.help'
 )
 

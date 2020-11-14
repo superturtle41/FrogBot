@@ -122,6 +122,20 @@ class Help(commands.Cog, name='Help'):
         bot.help_command = CustomHelp()
         bot.help_command.cog = self
 
+    @commands.command(name='support')
+    async def support_server(self, ctx):
+        """
+        Gives a link to the support server
+        """
+        support_guild = self.bot.get_guild(755202524859859004)
+
+        embed = create_default_embed(ctx)
+        embed.title = 'FrogBot Support Server'
+        embed.description = '[Link to support server](https://discord.gg/U5qN8qwQHN)'
+        if support_guild is not None:
+            embed.set_thumbnail(url=support_guild.icon_url)
+        return await ctx.send(embed=embed)
+
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
 
