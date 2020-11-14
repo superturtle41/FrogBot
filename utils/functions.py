@@ -10,7 +10,7 @@ async def try_delete(message):
 
 
 def create_default_embed(ctx) -> discord.Embed:
-    embed = discord.Embed(color=discord.Color(int('0x512888', base=16)))
+    embed = discord.Embed(color=discord.Color(int('0x2F3136', base=16)))
     bot = ctx.bot
     embed.set_author(name=ctx.message.author.display_name, icon_url=str(ctx.message.author.avatar_url))
     embed.set_footer(text=bot.user.name, icon_url=str(bot.user.avatar_url))
