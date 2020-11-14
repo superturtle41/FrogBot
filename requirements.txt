@@ -28,3 +28,4 @@ six==1.15.0
 urllib3==1.26.0
 Werkzeug==1.0.1
 yarl==1.5.1
+psutil=5.7.3
