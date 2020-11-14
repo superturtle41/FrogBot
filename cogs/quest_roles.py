@@ -1,6 +1,7 @@
-from discord.ext import commands
-import asyncio
 import discord
+from discord.ext import commands
+
+from utils.constants import DMS
 from utils.functions import create_default_embed, try_delete, get_positivity
 
 
@@ -10,6 +11,7 @@ class QuestRoles(commands.Cog):
 
     @commands.command(name='questrole', description='Creates a role for quests')
     @commands.bot_has_guild_permissions(manage_roles=True)
+    @commands.has_any_role(DMS)
     async def create_quest_role(self, ctx):
         """
         Creates a Role for Quests
