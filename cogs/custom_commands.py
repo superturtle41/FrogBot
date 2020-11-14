@@ -92,7 +92,6 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
         return await ctx.send(cc.content)
 
     @commands.group(name='cc', invoke_without_command=True)
-    @commands.check_any(commands.has_any_role('DM', 'Dragonspeaker'), is_owner())
     async def cc_base(self, ctx):
         """
         Base command for CustomCommand commands. Will list any custom commands for this server.
@@ -104,6 +103,7 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
         await cc_list.start(ctx)
 
     @cc_base.command(name='create')
+    @commands.check_any(commands.has_any_role('DM', 'Dragonspeaker'), is_owner())
     async def cc_create(self, ctx, name: str, *, content: str):
         """
         Create a new Custom Command.
@@ -119,6 +119,7 @@ class CustomCommands(commands.Cog, name='CustomCommands'):
         return await ctx.send(f'Created new command with name `{new_cc.name}`')
 
     @cc_base.command(name='delete')
+    @commands.check_any(commands.has_any_role('DM', 'Dragonspeaker'), is_owner())
     async def cc_delete(self, ctx, name: str):
         """
         Deletes a Custom Counter. The name must be an existing CC.
