@@ -112,18 +112,23 @@ class Utility(commands.Cog):
 
         embed.title = f'Member Information - {who.display_name} {badges}'
 
-        embed.add_field(name='Basics', value=f'Mention: {who.mention}\n'
-                                             f'Username: {who.name}#{who.discriminator}\n'
-                                             f'ID: {who.id}\n'
-                                             f'Status: {STATUS_EMOJIS[str(who.status)]}'
+        # -- Basics --
+        embed.add_field(name='Name', value=f'{who.mention}')
+        embed.add_field(name='Username', value=f'{who.name}#{who.discriminator}')
+        embed.add_field(name='ID', value=f'{who.id}')
+        embed.add_field(name='Status', value=f'Status: {STATUS_EMOJIS[str(who.status)]}'
                                              f' ({STATUS_NAMES[str(who.status)]})')
-        embed.add_field(name='Roles', value=f'Top Role: {who.top_role.mention}\n'
-                                            f'{len(who.roles)} role(s)\n'
-                                            f'Server Owner: {"True" if ctx.guild.owner.id == who.id else "False"}',
-                        inline=False)
-        embed.add_field(name='Date Information', value=f'Created at: {who.created_at.strftime(DATE_FORMAT)}\n'
-                                                       f'Joined at: {who.joined_at.strftime(DATE_FORMAT)}',
-                        inline=False)
+
+        # -- Roles --
+        embed.add_field(name='Roles', value=f'{len(who.roles)} role(s)')
+        embed.add_field(name='Top Role', value=f'{who.top_role.mention}'
+                                               f' (Position {who.top_role.position}/{ctx.guild.roles[-1].position})')
+        embed.add_field(name='Is Server Owner', value=f'{"True" if ctx.guild.owner.id == who.id else "False"}')
+
+        # -- Date Information --
+        embed.add_field(name='Account Created At', value=who.created_at.strftime(DATE_FORMAT))
+        embed.add_field(name='Joined Server At', value=who.joined_at.strftime(DATE_FORMAT))
+
         embed.set_thumbnail(url=who.avatar_url)
 
         await ctx.send(embed=embed)
