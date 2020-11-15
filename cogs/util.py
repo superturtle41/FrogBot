@@ -2,6 +2,7 @@ from discord.ext import commands
 import discord
 from utils.functions import create_default_embed
 from datetime import datetime
+from utils.constants import STATUS_EMOJIS, STATUS_NAMES
 
 
 def time_to_readable(delta_uptime):
@@ -90,6 +91,32 @@ class Utility(commands.Cog):
         embed.set_thumbnail(url=str(guild.icon_url))
 
         return await ctx.send(embed=embed, allowed_mentions=None)
+
+    @commands.command(name='memberinfo', aliases=['minfo'])
+    @commands.guild_only()
+    async def member_inf(self, ctx, who: discord.Member = None):
+        """
+        Shows information about a member in this server.
+        """
+        if who is None:
+            who = ctx.author
+        embed = create_default_embed(ctx)
+        embed.title = f'Member Information - {who.display_name}'
+        embed.add_field(name='Basics', value=f'Mention: {who.mention}\n'
+                                             f'Username: {who.name}#{who.discriminator}\n'
+                                             f'ID: {who.id}\n'
+                                             f'Status: {STATUS_EMOJIS[str(who.status)]}'
+                                             f' ({STATUS_NAMES[str(who.status)]})')
+        embed.add_field(name='Roles', value=f'Top Role: {who.top_role.mention}\n'
+                                            f'{len(who.roles)} role(s)\n'
+                                            f'Server Owner: {"True" if ctx.guild.owner.id == who.id else "False"}',
+                        inline=False)
+        embed.add_field(name='Date Information', value=f'Created at: {who.created_at.strftime(DATE_FORMAT)}\n'
+                                                       f'Joined at: {who.joined_at.strftime(DATE_FORMAT)}',
+                        inline=False)
+        embed.set_thumbnail(url=who.avatar_url)
+
+        await ctx.send(embed=embed)
 
     @commands.command(name='say')
     async def say(self, ctx, *, repeat: str):

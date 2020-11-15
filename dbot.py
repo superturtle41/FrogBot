@@ -90,7 +90,7 @@ class FrogBot(commands.Bot):
 
 intents = discord.Intents(
     guilds=True, members=True, messages=True, reactions=True,
-    bans=False, emojis=False, integrations=False, webhooks=False, invites=False, voice_states=False, presences=False,
+    bans=False, emojis=True, integrations=False, webhooks=False, invites=False, voice_states=False, presences=True,
     typing=False
 )
 
