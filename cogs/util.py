@@ -1,8 +1,8 @@
 from discord.ext import commands
 import discord
-from utils.functions import create_default_embed
+from utils.functions import create_default_embed, member_in_guild
 from datetime import datetime
-from utils.constants import STATUS_EMOJIS, STATUS_NAMES
+from utils.constants import STATUS_EMOJIS, STATUS_NAMES, BADGE_EMOJIS, SUPPORT_SERVER_ID
 
 
 def time_to_readable(delta_uptime):
@@ -101,7 +101,17 @@ class Utility(commands.Cog):
         if who is None:
             who = ctx.author
         embed = create_default_embed(ctx)
-        embed.title = f'Member Information - {who.display_name}'
+        badges = ''
+        if who.id == self.bot.owner:
+            badges += f'{BADGE_EMOJIS["bot_owner"]} '
+        if who.id == ctx.guild.owner.id:
+            badges += f'{BADGE_EMOJIS["server_owner"]} '
+        support_server = self.bot.get_guild(SUPPORT_SERVER_ID)
+        if support_server is not None and member_in_guild(who.id, support_server):
+            badges += f'{BADGE_EMOJIS["support_server"]}'
+
+        embed.title = f'Member Information - {who.display_name} {badges}'
+
         embed.add_field(name='Basics', value=f'Mention: {who.mention}\n'
                                              f'Username: {who.name}#{who.discriminator}\n'
                                              f'ID: {who.id}\n'

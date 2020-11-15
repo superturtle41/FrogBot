@@ -37,3 +37,10 @@ def get_positivity(string):
         return False
     else:
         return None
+
+
+def member_in_guild(member_id, guild: discord.Guild) -> bool:
+    for member in guild.members:
+        if member.id == member_id:
+            return True
+    return False
