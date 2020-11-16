@@ -25,7 +25,6 @@ class DMCommands(commands.Cog):
     @commands.group(name='dm', invoke_without_command=True)
     @commands.check_any(commands.has_role('DM'), is_owner())
     @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
-    @commands.cooldown(1, 3, commands.BucketType.user)
     async def dm(self, ctx):
         """
         Base command for all other DM commands
@@ -44,6 +43,9 @@ class DMCommands(commands.Cog):
                                   f'| Not what you expected? Double check you entered a valid subcommand.')
         return await ctx.send(embed=embed)
 
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     @dm.command(name='setup', description='Creates a DM Category.', aliases=['create', 'new'])
     async def dm_setup(self, ctx):
         """
@@ -63,6 +65,8 @@ class DMCommands(commands.Cog):
         return await ctx.send(embed=embed)
 
     @dm.command(name='delete', description='Deletes a DM Category.', aliases=['remove', 'del'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_delete(self, ctx):
         """
         Deletes your DM category for that server.
@@ -82,6 +86,9 @@ class DMCommands(commands.Cog):
             await current_cat.delete(self.bot)
         await ctx.send(embed=embed)
 
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     @dm.command(name='update', description='Syncs all Channel Permissions', aliases=['uc'])
     async def dm_update(self, ctx):
         """
@@ -99,6 +106,8 @@ class DMCommands(commands.Cog):
     # Roles
 
     @dm.command(name='addrole', description='Adds a role to a channel with read/write.', aliases=['ar'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_add_role(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Role, type_: int = 1):
         """
         Adds a role to a DM Channel with permissions.
@@ -121,6 +130,8 @@ class DMCommands(commands.Cog):
         return await ctx.send(embed=embed)
 
     @dm.command(name='addrole-all', description='Adds a role to all of your DM channels.', aliases=['ara'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_add_role_all(self, ctx, to_add: discord.Role, type_: typing.Optional[int] = 1,
                               ignore: discord.TextChannel = None):
         """
@@ -144,6 +155,8 @@ class DMCommands(commands.Cog):
         return await ctx.send(embed=embed)
 
     @dm.command(name='removerole', description='Removes a role from a channel.', aliases=['rr'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_remove_role(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Role):
         """
         Removes a role from a DM Channel.
@@ -166,6 +179,8 @@ class DMCommands(commands.Cog):
         return await ctx.send(embed=embed)
 
     @dm.command(name='removerole-all', description='Removes a roll from all channels.', aliases=['rra'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_remove_role_all(self, ctx, to_remove: discord.Role):
         """
         Removes a role from all of your DM channels.
@@ -184,6 +199,8 @@ class DMCommands(commands.Cog):
     # Users
 
     @dm.command(name='adduser', description='Adds a user to a channel with read/write', aliases=['au'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_add_user(self, ctx, channel_to_change: discord.TextChannel, to_add: discord.Member, type_: int = 1):
         """
         Adds a user to one of your DM Channels.
@@ -205,6 +222,8 @@ class DMCommands(commands.Cog):
         return await ctx.send(embed=embed)
 
     @dm.command(name='removeuser', description='Removes a user from a channel', aliases=['ru'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_remove_user(self, ctx, channel_to_change: discord.TextChannel, to_remove: discord.Member):
         """
         Removes a user from one of your DM channels.
@@ -232,6 +251,9 @@ class DMCommands(commands.Cog):
     # Channel Modification (Create/Delete)
 
     @dm.command(name='createchannel', aliases=['cc'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
+    @commands.cooldown(1, 3, commands.BucketType.user)
     async def dm_create_channel(self, ctx, channel_name: str):
         """
         Creates a channel in your DM category.
@@ -251,6 +273,9 @@ class DMCommands(commands.Cog):
         await ctx.send(embed=embed)
 
     @dm.command(name='deletechannel', aliases=['dc'])
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_delete_channel(self, ctx, channel_to_delete: discord.TextChannel):
         """
         Deletes a channel from your DM Category.
@@ -273,9 +298,62 @@ class DMCommands(commands.Cog):
                 pass
             await ctx.send(embed=embed)
 
+    # Archive/Unarchive Commands
+
+    @dm.command(name='archive', aliases=['arc'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
+    async def dm_archive(self, ctx, channels: commands.Greedy[discord.TextChannel] = None, unarchive=False):
+        """
+        Archives as many channels as are passed
+
+        Sets all current permissions to Permission Type 2 (read only)
+        """
+        current_cat, embed, test = await get_category_and_embed(ctx)
+        if test:
+            if channels is None:
+                channels = [ctx.channel]
+            for channel in channels:
+                channel = next((dmc for dmc in current_cat.channels if dmc.channel.id == channel.id), None)
+                if channel is None:
+                    return await ctx.send(
+                        f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
+                new_permissions = []
+                for permission in channel.permissions:
+                    if unarchive:
+                        new_perm = DMPermissions(type_=permission.raw_object_type, obj=permission.applies_to,
+                                                 perm_type=1, guild=permission.guild)
+                        embed.add_field(name=f'{channel.channel.name}', value='Unarchived')
+                    else:
+                        new_perm = DMPermissions(type_=permission.raw_object_type, obj=permission.applies_to,
+                                                 perm_type=2, guild=permission.guild)
+                        embed.add_field(name=f'{channel.channel.name}', value='Archived')
+                    new_permissions.append(new_perm)
+                channel.permissions = new_permissions
+                await channel.sync_permissions()
+            if unarchive:
+                embed.title = f'{ctx.author.display_name} unarchives {", ".join([c.name for c in channels])}'
+            else:
+                embed.title = f'{ctx.author.display_name} archives {", ".join([c.name for c in channels])}'
+            await ctx.send(embed=embed)
+
+    # Archive/Unarchive Commands
+    @dm.command(name='unarchive', aliases=['uarc'])
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
+    async def dm_unarchive(self, ctx, channels: commands.Greedy[discord.TextChannel] = None):
+        """
+        Unarchives a channel
+
+        Sets all current permissions to type 1.
+        """
+        await ctx.invoke(self.dm_archive, channels=channels, unarchive=True)
+
     # Util Commands
 
     @dm.command(name='list', description='List permissions for a certain channel.')
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_list_perms(self, ctx, channel: discord.TextChannel = None):
         """
         List the permissions for a DM Channel.
@@ -296,6 +374,9 @@ class DMCommands(commands.Cog):
         await ctx.send(embed=embed)
 
     @dm.command(name='resetchannel', description='Resets a channel to default permissions.', aliases=['rc'])
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    @commands.check_any(commands.has_role('DM'), is_owner())
+    @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_channel_reset(self, ctx, to_reset: discord.TextChannel):
         """
         Resets one of your DM Channels to default permissions.

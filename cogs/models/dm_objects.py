@@ -264,6 +264,10 @@ class DMPermissions:
         return self._obj_type
 
     @property
+    def raw_object_type(self):
+        return self._type
+
+    @property
     def applies_to(self):
         return self._obj
 
@@ -277,3 +281,6 @@ class DMPermissions:
 
     async def apply_permission(self, channel):
         await channel.set_permissions(self.applies_to, overwrite=self.permissions)
+
+    def __repl__(self):
+        return f'<DMPermissions permissions={self.permissions} applies_to={self.applies_to} type={self.perm_type}>'
