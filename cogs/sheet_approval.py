@@ -44,7 +44,7 @@ class ToBeApproved:
     async def commit(self, db):
         db.update_one({'message_id': self.message_id}, {'$set': self.to_dict()}, upsert=True)
 
-    async def fields(self, guild):
+    async def fields(self, guild, bot):
         message = await self.get_message(guild)
         embed = message.embeds[0]
         embed.clear_fields()
@@ -60,8 +60,8 @@ class ToBeApproved:
                                   f' and then go to <#608030916778000395> and do the pinned commands for your sheet!',
                             inline=False)
             general = None
-            if self.bot.personal_server['general_channel'] is not None:
-                general = guild.get_channel(self.bot.personal_server['general_channel'])
+            if bot.personal_server['general_channel'] is not None:
+                general = guild.get_channel(bot.personal_server['general_channel'])
             if general is not None:
                 await general.send(f'{mention.mention}, your character with the following content has been approved:\n'
                                    f'```\n{embed.description}\n```\n'
@@ -69,7 +69,7 @@ class ToBeApproved:
                                    allowed_mentions=discord.AllowedMentions(users=[mention]))
         await message.edit(embed=embed)
 
-    async def add_approval(self, guild, approver):
+    async def add_approval(self, guild, approver, bot):
         if approver.id in self.approvals:
             return
         if approver.id == self.owner_id:
@@ -78,21 +78,21 @@ class ToBeApproved:
         self.approvals.append(approver.id)
 
         if len(self.approvals) >= 2:
-            await self.approve(guild)
+            await self.approve(guild, bot)
         else:
-            await self.fields(guild)
+            await self.fields(guild, bot)
 
-    async def remove_approval(self, guild, user_id):
+    async def remove_approval(self, guild, user_id, bot):
         member = guild.get_member(user_id)
         if member.id not in self.approvals:
             return
         self.approvals.remove(member.id)
-        await self.fields(guild)
+        await self.fields(guild, bot)
 
-    async def approve(self, guild):
+    async def approve(self, guild, bot):
         if len(self.approvals) < 2:
             return
-        await self.fields(guild)
+        await self.fields(guild, bot)
         member = guild.get_member(self.owner_id)
         if member is None:
             return None
@@ -149,7 +149,7 @@ class SheetApproval(commands.Cog):
 
         guild = self.bot.get_guild(payload.guild_id)
 
-        await sheet.add_approval(guild, payload.member)
+        await sheet.add_approval(guild, payload.member, self.bot)
         await sheet.commit(self.bot.mdb['to_approve'])
 
     @commands.Cog.listener('on_raw_reaction_remove')
@@ -159,7 +159,7 @@ class SheetApproval(commands.Cog):
             return
 
         guild = self.bot.get_guild(payload.guild_id)
-        await sheet.remove_approval(guild, payload.user_id)
+        await sheet.remove_approval(guild, payload.user_id, self.bot)
         await sheet.commit(self.bot.mdb['to_approve'])
 
     @commands.command(name='sheet', aliases=['submit'])
