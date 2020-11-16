@@ -255,6 +255,15 @@ class DMPermissions:
             'obj_id': self.applies_to.id
         }
 
+    def change_type(self, new_type: int):
+        self._type = new_type
+        self._perms = [CHANNEL_ADMIN, CHANNEL_READ_WRITE, CHANNEL_READ, CHANNEL_HIDDEN][new_type]
+        return self
+
+    @property
+    def raw_object_type(self):
+        return self._type
+
     @property
     def permissions(self):
         return self._perms
