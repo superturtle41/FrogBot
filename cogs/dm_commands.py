@@ -332,8 +332,7 @@ class DMCommands(commands.Cog):
     @commands.check_any(commands.has_role('DM'), is_owner())
     @commands.bot_has_guild_permissions(manage_channels=True, manage_messages=True)
     async def dm_unarchive(self, ctx, channels: commands.Greedy[discord.TextChannel]):
-        # await ctx.invoke(self.dm_archive, channels=channels, archive=False)
-        return await ctx.send('This command has not been implemented yet.')
+        await ctx.invoke(self.dm_archive, channels=channels, archive=False)
 
     # Util Commands
 

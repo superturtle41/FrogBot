@@ -147,6 +147,10 @@ class DMCategory:
     def __str__(self):
         return f"{self.category.name} | {len(self.channels)} channel(s) | {self.category.guild.name}"
 
+    def __repr__(self):
+        return f"<DMCategory name={self.category.name}, channels={[c.__repl__() for c in self.channels]}, " \
+               f"guild={self.guild}>"
+
 
 class DMChannel:
     def __init__(self, category: DMCategory, permissions: list, channel: discord.TextChannel):
@@ -206,7 +210,6 @@ class DMChannel:
         else:
             return None
 
-
     @property
     def category(self):
         return self._category
@@ -218,6 +221,10 @@ class DMChannel:
     @property
     def channel(self):
         return self._channel
+
+    def __repl__(self):
+        return f'<DMChannel channel={self.channel}, category={self.category}, ' \
+               f'permissions={[p.__repl__() for p in self.permissions]}>'
 
 
 class DMPermissions:
@@ -256,13 +263,13 @@ class DMPermissions:
         }
 
     def change_type(self, new_type: int):
-        self._type = new_type
+        self._perm_type = new_type
         self._perms = [CHANNEL_ADMIN, CHANNEL_READ_WRITE, CHANNEL_READ, CHANNEL_HIDDEN][new_type]
         return self
 
     @property
-    def raw_object_type(self):
-        return self._type
+    def raw_perm_type(self):
+        return self._perm_type
 
     @property
     def permissions(self):
@@ -286,3 +293,7 @@ class DMPermissions:
 
     async def apply_permission(self, channel):
         await channel.set_permissions(self.applies_to, overwrite=self.permissions)
+
+    def __repl__(self):
+        return f'<DMPermission obj_type={self.object_type}, applies_to={self.applies_to}, guild={self.guild}, ' \
+               f'perm_type={self.perm_type}>'
