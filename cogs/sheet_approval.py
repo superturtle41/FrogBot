@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 from utils.checks import is_personal_server
-from utils.constants import BOT_MODS
+from utils.constants import BOT_MODS, SUPPORT_SERVER_ID
 from utils.functions import create_default_embed
 
 log = logging.getLogger('sheet approval')
@@ -116,7 +116,8 @@ class SheetApproval(commands.Cog):
     async def sheet_from_emoji(self, payload) -> ToBeApproved:
         # Check the Guild
         guild_id = payload.guild_id
-        if guild_id != self.bot.personal_server:
+        if guild_id != self.bot.personal_server['server_id']:
+            print('error')
             return None
 
         # Check the Roles
@@ -188,7 +189,7 @@ class SheetApproval(commands.Cog):
 
     @commands.command('cleanup_sheets')
     @is_personal_server()
-    @commands.has_any_role(BOT_MODS)
+    @commands.has_any_role(*BOT_MODS)
     async def remove_sheets(self, ctx):
         """
         Removes deleted sheets from database. Owner only.
