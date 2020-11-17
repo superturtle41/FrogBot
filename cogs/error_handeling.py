@@ -107,6 +107,10 @@ class CommandErrorHandler(commands.Cog):
             msg = str(error) or "Command On Cooldown"
             return await ctx.send(f'Error: {msg}')
 
+        elif isinstance(error, discord.Forbidden):
+            msg = str(error) or "Forbidden - Not allowed to perform this action."
+            return await ctx.send(f'Error: {msg}')
+
         elif isinstance(error, commands.NoPrivateMessage):
             try:
                 await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
