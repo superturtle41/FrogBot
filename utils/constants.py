@@ -1,6 +1,6 @@
 SUPPORT_SERVER_ID = 755202524859859004
 
-DATE_FORMAT = '%A, %B %d, %Y at %I:%M:%S %p'
+DATE_FORMAT = '%A, %B %d, %Y at %I:%M:%S %pZ'
 
 BOT_MODS = ('DM', 'Dragonspeaker', 'Bot Admin')
 DMS = ('DM', 'Trial DM')

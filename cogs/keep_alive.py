@@ -17,11 +17,14 @@ class KeepAlive(commands.Cog):
     def cog_unload(self):
         self.alive_post.cancel()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=300)
     async def alive_post(self):
         headers = {'x-api-key': self.key}
-        async with self.session.post(url=self.url, headers=headers) as _:
-            log.info('Sent Uptime POST')
+        try:
+            async with self.session.post(url=self.url, headers=headers) as r:
+                log.info(f'Uptime Post Response: {r.status}\n{await r.text()}')
+        except aiohttp.client_exceptions.ClientConnectorError:
+            log.error('Could not connect to API!')
 
     @alive_post.before_loop
     async def before_alive(self):
