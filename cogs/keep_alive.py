@@ -21,8 +21,9 @@ class KeepAlive(commands.Cog):
     async def alive_post(self):
         headers = {'x-api-key': self.key}
         try:
-            async with self.session.post(url=self.url, headers=headers) as r:
-                log.info(f'Uptime Post Response: {r.status}\n{await r.text()}')
+            async with self.session.post(url=self.url, headers=headers) as _:
+                pass
+                # log.info(f'Uptime Post Response: {r.status}\n{await r.text()}')
         except aiohttp.client_exceptions.ClientConnectorError:
             log.error('Could not connect to API!')
 
