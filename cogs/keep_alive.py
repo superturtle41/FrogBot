@@ -1,6 +1,7 @@
 from discord.ext import commands, tasks
 import aiohttp
 import logging
+import dbl
 
 log = logging.getLogger(__name__)
 
@@ -13,6 +14,12 @@ class KeepAlive(commands.Cog):
             self.url = url
             self.key = key
             self.alive_post.start()
+        else:
+            log.warning('Not starting Keep Alive server.')
+        if (token := self.bot.config.DBL_API_KEY) is not None:
+            self.dbl_client = dbl.DBLClient(self.bot, token=token, autopost=True)
+        else:
+            log.warning('No DBL API key token provided.')
 
     def cog_unload(self):
         self.alive_post.cancel()
