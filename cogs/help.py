@@ -100,7 +100,7 @@ class CustomHelp(commands.HelpCommand):
         out = generate_command_names(command_list, short_doc=True)
 
         source = HelpCogMenu(data=out, ctx=self.context, embed_title=title, embed_footer=footer,
-                             embed_desc=group.description or 'No description specified.')
+                             embed_desc=group.help or 'No description specified.')
         command_menu = menus.MenuPages(source=source, clear_reactions_after=True)
         await command_menu.start(self.context, channel=to_send)
 
