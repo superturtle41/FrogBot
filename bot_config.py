@@ -8,8 +8,8 @@ MONGO_DB = os.environ.get('MONGO_DB', 'frogbotdb')
 DEFAULT_STATUS = os.environ.get('DISCORD_STATUS', f'with the API')
 
 # API
-API_URL = os.getenv('API_URL', None)
-API_KEY = os.getenv('API_KEY', None)
+API_URL = os.getenv('BOT_API_URL', None)
+API_KEY = os.getenv('BOT_API_KEY', None)
 
 # Version
 VERSION = os.environ.get('VERSION', 'testing')
