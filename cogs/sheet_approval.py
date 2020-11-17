@@ -117,7 +117,6 @@ class SheetApproval(commands.Cog):
         # Check the Guild
         guild_id = payload.guild_id
         if guild_id != self.bot.personal_server['server_id']:
-            print('error')
             return None
 
         # Check the Roles
