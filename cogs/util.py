@@ -2,7 +2,7 @@ from discord.ext import commands
 import discord
 from utils.functions import create_default_embed, member_in_guild
 from datetime import datetime
-from utils.constants import STATUS_EMOJIS, STATUS_NAMES, BADGE_EMOJIS, SUPPORT_SERVER_ID
+from utils.constants import STATUS_EMOJIS, STATUS_NAMES, BADGE_EMOJIS, SUPPORT_SERVER_ID, DATE_FORMAT
 
 
 def time_to_readable(delta_uptime):
@@ -10,9 +10,6 @@ def time_to_readable(delta_uptime):
     minutes, seconds = divmod(remainder, 60)
     days, hours = divmod(hours, 24)
     return f"{days}d, {hours}h, {minutes}m, {seconds}s"
-
-
-DATE_FORMAT = '%A, %B %d, %Y at %I:%M:%S %p'
 
 
 class Utility(commands.Cog):

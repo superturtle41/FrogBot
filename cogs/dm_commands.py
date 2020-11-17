@@ -285,7 +285,7 @@ class DMCommands(commands.Cog):
             if channel is None:
                 return await ctx.send(f'Channel was not found in your category. Try running `{ctx.prefix}dm update`')
             embed.title = f'{ctx.author.display_name} deletes {channel_to_delete.name}'
-            embed.description = f'f{channel_to_delete.name} has been deleted.'
+            embed.description = f'{channel_to_delete.name} has been deleted.'
             # Delete Channel
             current_cat.channels.pop(current_cat.channels.index(channel))
             await current_cat.commit(self.bot)

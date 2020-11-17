@@ -23,7 +23,10 @@ Setup
     1. `DISCORD_MONGO_URL` - URL to Mongo DB with auth
     2. `DISCORD_BOT_TOKEN` - Token of the bot.
     3. `DISCORD_BOT_PREFIX` - Sets the prefix of the bot for commands
-    4. `MONGO_DB` - (Optional) Sets which database to use on the Mongo Server.
+    4. `MONGO_DB` - Sets which database to use on the Mongo Server.
+    5. `SENTRY_URL` (Optional) - URL For Sentry Error Reporting
+    6. `API_URL` (Optional) - URL for API (Used for online checks.)
+    7. `API_KEY` (Optional) - Key for above API
 4. Install Dependencies
     1. `pip install -r requirements.txt`
 5. Run Bot (Make sure your environment variables are set)
