@@ -1,5 +1,6 @@
 from discord.ext import commands
 import bot_config as config
+from utils.errors import UnauthorizedServer
 
 
 def is_owner():
@@ -12,7 +13,7 @@ def is_owner():
 def is_personal_server():
     async def predicate(ctx):
         if ctx.bot.personal_server['server_id'] is None:
-            return False
+            raise UnauthorizedServer('This command is not allowed to be run in this server.')
         return ctx.guild_id == ctx.bot.personal_server['server_id']
 
     return commands.check(predicate)

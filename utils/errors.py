@@ -4,3 +4,7 @@ class InvalidArgument(Exception):
 
 class CategoryExists(Exception):
     pass
+
+
+class UnauthorizedServer(Exception):
+    pass
