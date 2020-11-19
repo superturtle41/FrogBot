@@ -118,8 +118,9 @@ class Utility(commands.Cog):
 
         # -- Roles --
         embed.add_field(name='Roles', value=f'{len(who.roles)} role(s)')
-        embed.add_field(name='Top Role', value=f'{who.top_role.mention}'
-                                               f' (Position {who.top_role.position}/{ctx.guild.roles[-1].position})')
+        embed.add_field(name='Top Role',
+                        value=f'{who.top_role.mention if who.top_role.name != "@everyone" else "Default Role"}'
+                              f' (Position {who.top_role.position}/{ctx.guild.roles[-1].position})')
         embed.add_field(name='Is Server Owner', value=f'{"True" if ctx.guild.owner.id == who.id else "False"}')
 
         # -- Date Information --
