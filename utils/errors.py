@@ -8,3 +8,7 @@ class CategoryExists(Exception):
 
 class UnauthorizedServer(Exception):
     pass
+
+
+class IsNotDM(Exception):
+    pass

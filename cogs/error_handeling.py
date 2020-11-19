@@ -2,7 +2,7 @@ import discord
 import traceback
 import sys
 from discord.ext import commands
-from utils.errors import InvalidArgument, UnauthorizedServer
+from utils.errors import InvalidArgument, UnauthorizedServer, IsNotDM
 
 import sentry_sdk
 import logging
@@ -79,6 +79,9 @@ class CommandErrorHandler(commands.Cog):
         elif isinstance(error, UnauthorizedServer):
             msg = str(error) or "You are not allowed to run this command in this server."
             return await ctx.send(f"Error: {msg}")
+
+        elif isinstance(error, IsNotDM):
+            return await ctx.send(f'Error: {str(error)}')
 
         elif isinstance(error, commands.CheckFailure):
             msg = str(error) or "You are not allowed to run this command."

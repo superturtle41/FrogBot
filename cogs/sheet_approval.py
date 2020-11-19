@@ -106,7 +106,7 @@ class ToBeApproved:
             await member.remove_roles(commoner_role, reason='Approved.')
 
 
-APPROVAL_ROLES = ('DM', 'Lord of the Sheet')
+APPROVAL_ROLES = ('dmn', 'lord of the sheet')
 
 
 class SheetApproval(commands.Cog):
@@ -125,7 +125,7 @@ class SheetApproval(commands.Cog):
             member = self.bot.get_guild(guild_id).get_member(payload.user_id)
             if member is None:
                 return None
-        if len([role for role in member.roles if role.name in APPROVAL_ROLES]) == 0:
+        if len([role for role in member.roles if role.name.lower() in APPROVAL_ROLES]) == 0:
             return None
 
         # Check to see if it's an existing sheet
