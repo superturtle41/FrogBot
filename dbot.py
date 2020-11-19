@@ -109,6 +109,10 @@ logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 log = logging.getLogger('bot')
 
+# Make discord logs a bit quieter
+logging.getLogger('discord.gateway').setLevel(logging.WARNING)
+logging.getLogger('discord.client').setLevel(logging.WARNING)
+
 
 @bot.event
 async def on_ready():
