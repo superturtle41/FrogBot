@@ -3,6 +3,8 @@ import discord
 from utils.functions import create_default_embed, member_in_guild
 from datetime import datetime
 from utils.constants import STATUS_EMOJIS, STATUS_NAMES, BADGE_EMOJIS, SUPPORT_SERVER_ID, DATE_FORMAT
+import psutil
+import os
 
 
 def time_to_readable(delta_uptime):
@@ -15,6 +17,7 @@ def time_to_readable(delta_uptime):
 class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self._command_count = None
 
     @commands.command(name='ping')
     async def ping(self, ctx):
@@ -160,6 +163,31 @@ class Utility(commands.Cog):
         embed.title = 'FrogBot Source'
         embed.description = '[Click here for the Source Code.](https://github.com/1drturtle/FrogBot)'
         embed.set_thumbnail(url=str(self.bot.user.avatar_url))
+        await ctx.send(embed=embed)
+
+    @commands.command(name='debug')
+    async def debug(self, ctx):
+        """
+        Debugging commands for FrogBot
+        """
+        embed = create_default_embed(ctx)
+        embed.title = 'FrogBot Debug'
+        # -- Calculate Values --
+        proc = psutil.Process(os.getpid())
+        cpu = psutil.cpu_percent()
+        mem = psutil.virtual_memory()
+        mem_used = proc.memory_full_info().uss
+        if self._command_count is None:
+            self._command_count = len([command for cog in self.bot.cogs
+                                       for command in self.bot.get_cog(cog).walk_commands()])
+        command_count = self._command_count
+        # -- Add fields ---
+        embed.add_field(name='Memory Usage', value=f'{round((mem_used / 1000000), 2)} '
+                                                   f'/ {round((mem.total / 1000000), 2)} MB '
+                                                   f'({round(100 * (mem_used / mem.total), 2)}%)')
+        embed.add_field(name='CPU Usage', value=f'{round(cpu, 2)}%')
+        embed.add_field(name='Commands', value=f'{command_count} total commands loaded.')
+
         await ctx.send(embed=embed)
 
 
