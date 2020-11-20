@@ -26,6 +26,9 @@ def is_personal_server():
 def can_use_dm():
     async def predicate(ctx):
         # does the bot have permissions?
+        if ctx.guild_id is None:
+            raise commands.NoPrivateMessage('This command cannot be used in DMs.'
+                                            '')
         perms = ctx.me.guild_permissions
         if not perms.manage_channels:
             raise commands.BotMissingPermissions('manage_channels')
