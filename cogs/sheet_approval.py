@@ -106,7 +106,7 @@ class ToBeApproved:
             await member.remove_roles(commoner_role, reason='Approved.')
 
 
-APPROVAL_ROLES = ('dmn', 'lord of the sheet')
+APPROVAL_ROLES = ('dm', 'lord of the sheet')
 
 
 class SheetApproval(commands.Cog):
