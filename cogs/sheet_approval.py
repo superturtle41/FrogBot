@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ext import commands
 
-from utils.checks import is_personal_server
+from utils.checks import is_personal_server, is_owner
 from utils.constants import BOT_MODS
 from utils.functions import create_default_embed
 
@@ -188,10 +188,10 @@ class SheetApproval(commands.Cog):
 
     @commands.command('cleanup_sheets')
     @is_personal_server()
-    @commands.has_any_role(*BOT_MODS)
+    @commands.check_any(is_owner(), commands.has_any_role(*BOT_MODS))
     async def remove_sheets(self, ctx):
         """
-        Removes deleted sheets from database. Owner only.
+        Removes deleted sheets from database. Run every once and a while.
         """
         db = self.bot.mdb['to_approve']
 
