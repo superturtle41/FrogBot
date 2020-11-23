@@ -13,7 +13,8 @@ from utils.functions import try_delete
 import sentry_sdk
 
 COGS = (
-    'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling', 'cogs.custom_commands', 'cogs.keep_alive',
+    'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling', 'cogs.info',
+    'cogs.custom_commands', 'cogs.keep_alive',
     'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
     'cogs.help'
 )
@@ -45,12 +46,16 @@ class FrogBot(commands.Bot):
         self.mdb = self.mongo_client[config.MONGO_DB]
         self.muted = set()
         self.prefixes = dict()
+        self.api_keys = {
+            'dbl_api_key': config.DBL_API_KEY,
+            'server_api_url': config.API_URL,
+            'server_api_key': config.API_KEY
+        }
         self.personal_server = {
             'server_id': None,
             'sheet_channel': None,
             'general_channel': None
         }
-        self.config = config
         self.sentry_url = config.SENTRY_URL
         super(FrogBot, self).__init__(command_prefix, description=desc, **options)
 

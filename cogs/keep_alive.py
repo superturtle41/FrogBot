@@ -10,13 +10,13 @@ class KeepAlive(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
-        if (url := self.bot.config.API_URL) and (key := self.bot.config.API_KEY):
+        if (url := self.bot.api_keys['server_api_url']) and (key := self.bot.api_keys['server_api_key']):
             self.url = url
             self.key = key
             self.alive_post.start()
         else:
             log.warning('Not starting Keep Alive server.')
-        if (token := self.bot.config.DBL_API_KEY) is not None:
+        if (token := self.bot.api_keys['dbl_api_key']) is not None:
             self.dbl_client = dbl.DBLClient(self.bot, token=token, autopost=True)
         else:
             log.warning('No DBL API key token provided.')
