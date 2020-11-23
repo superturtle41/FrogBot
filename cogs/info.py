@@ -101,20 +101,14 @@ class Info(commands.Cog):
         Returns custom emoji information.
         """
         embed = create_default_embed(ctx)
-        embed.title = emoji_to_parse.name
+        embed.title = f'Emoji - :{emoji_to_parse.name}:'
 
         embed.add_field(name='Guild', value=emoji_to_parse.guild.name)
-        embed.add_fiedl(name='ID', value=emoji_to_parse.guild.id)
+        embed.add_field(name='ID', value=emoji_to_parse.guild.id)
 
         embed.set_image(url=str(emoji_to_parse.url))
 
         await ctx.send(embed=embed)
-
-    @emoji_info.error
-    async def emoji_info_error(self, ctx, error):
-        if isinstance(error, commands.EmojiNotFound):
-            await ctx.send('I could not find the emoji that you provided. Either I do not have access to it, '
-                           'or it is a default emoji.')
 
 
 def setup(bot):

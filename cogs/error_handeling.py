@@ -83,6 +83,10 @@ class CommandErrorHandler(commands.Cog):
         elif isinstance(error, IsNotDM):
             return await ctx.send(f'Error: {str(error)}')
 
+        elif isinstance(error, commands.EmojiNotFound):
+            await ctx.send('I could not find the emoji that you provided. Either I do not have access to it, '
+                           'or it is a default emoji.')
+
         elif isinstance(error, commands.CheckFailure):
             msg = str(error) or "You are not allowed to run this command."
             return await ctx.send(f"Error: {msg}")
