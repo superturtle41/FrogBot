@@ -14,7 +14,7 @@ import sentry_sdk
 
 COGS = (
     'cogs.meta.util', 'jishaku', 'cogs.meta.admin', 'cogs.meta.error_handling', 'cogs.meta.info',
-    'cogs.meta.keep_alive', 'cogs.custom_commands', 'cogs.fun', 'cogs.moderation',
+    'cogs.meta.keep_alive', 'cogs.custom_commands', 'cogs.fun', 'cogs.moderation', 'cogs.images',
     'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
     'cogs.meta.help'
 )
