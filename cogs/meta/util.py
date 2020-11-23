@@ -105,7 +105,7 @@ class Utility(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='invite')
-    async def bot_invite(self, ctx):
+    async def send_invite(self, ctx):
         """
         Sends a link to invite FrogBot
         """
@@ -117,7 +117,7 @@ class Utility(commands.Cog):
                             '&permissions=470117462' \
                             '&scope=bot)'
         await ctx.send(embed=embed)
-        
+
 
 def setup(bot):
     bot.add_cog(Utility(bot))

@@ -11,7 +11,7 @@ class Moderation(commands.Cog):
 
     @commands.command(name='ban')
     @commands.guild_only()
-    @commands.bot_has_permissions(ban_member=True)
+    @commands.bot_has_permissions(ban_members=True)
     @commands.check_any(commands.has_permissions(ban_members=True), is_owner(), able_to_ban())
     async def ban_member(self, ctx, who_to_ban: discord.Member, *, reason: str = None):
         """
