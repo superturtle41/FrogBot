@@ -23,7 +23,8 @@ class Moderation(commands.Cog):
         if ctx.guild.me.top_role < who_to_ban.top_role:
             return await ctx.send(f'I cannot ban {who_to_ban.mention}, as they have a higher role than me.')
         reason = 'No reason provided.' if reason is None else reason
-        await ctx.guild.ban(who_to_ban, reason)
+        reason = f'Banned by {ctx.author.name}#{ctx.author.discriminator}: '
+        await ctx.guild.ban(who_to_ban, reason=reason)
         return await ctx.send(f'{who_to_ban.mention} has been banned for the server with reason: {reason}')
 
 
