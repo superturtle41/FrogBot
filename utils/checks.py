@@ -1,6 +1,7 @@
 from discord.ext import commands
 import bot_config as config
 from utils.errors import UnauthorizedServer, IsNotDM
+from utils.constants import ABLE_TO_BAN
 
 
 def _is_owner_check(author_id):
@@ -41,4 +42,12 @@ def can_use_dm():
         if _is_owner_check(ctx.author.id):
             return True
         raise IsNotDM('You must have a role called DM to perform this command.')
+    return commands.check(predicate)
+
+
+def able_to_ban():
+    async def predicate(ctx):
+        if len([r for r in ctx.author.roles if r.name.lower in ABLE_TO_BAN]):
+            return True
+        raise commands.BadArgument('You are not authorized to run this command!')
     return commands.check(predicate)
