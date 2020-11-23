@@ -119,34 +119,6 @@ class Admin(commands.Cog):
 
         return await ctx.send(f'Set <#{channel.id}> to sheet channel.')
 
-    @admin.command(name='authorize', description='Add user to authorized list.')
-    @is_owner()
-    async def authorize_add(self, ctx, to_auth: discord.Member):
-        """
-        Adds a user to the bot's authorized list.
-        """
-        uid = to_auth.id
-        await ctx.bot.mdb['authorized'].update_one({'_id': uid}, {'$set': {'_id': uid}}, upsert=True)
-
-        return await ctx.send(f'User {ctx.author.display_name} added to authorized list.')
-
-    @admin.command(name='ban')
-    @commands.guild_only()
-    @is_owner()
-    async def manual_ban(self, ctx, to_ban: discord.Member, hard: bool = False):
-        """
-        Bans a member from the server.
-        """
-        try:
-            if hard:
-                await ctx.guild.kick(to_ban)
-            await ctx.guild.ban(to_ban, reason=f'Banned by {ctx.author.display_name}')
-            await ctx.send(f'User `{to_ban.name}#{to_ban.discriminator}` has been banned from the server.')
-        except discord.Forbidden:
-            return await ctx.author.dm_channel.send('I do not have permissions to ban this user.')
-        except discord.HTTPException:
-            return await ctx.author.dm_channel.send('An unknown discord error occurred. Pleas try again later.')
-
     @admin.command(name='leave')
     @is_owner()
     async def leave_guild(self, ctx, guild_id: int):
