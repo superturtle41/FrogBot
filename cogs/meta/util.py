@@ -104,6 +104,20 @@ class Utility(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name='invite')
+    async def bot_invite(self, ctx):
+        """
+        Sends a link to invite FrogBot
+        """
+        embed = create_default_embed(ctx)
+        embed.title = 'FrogBot Invite Link'
+        embed.description = '[Click here to invite FrogBot to your server!]' \
+                            '(https://discord.com/api/oauth2/authorize' \
+                            '?client_id=717467616700006482' \
+                            '&permissions=470117462' \
+                            '&scope=bot)'
+        await ctx.send(embed=embed)
+        
 
 def setup(bot):
     bot.add_cog(Utility(bot))
