@@ -3,6 +3,7 @@ from datetime import datetime
 
 import psutil
 from discord.ext import commands
+import discord
 
 from utils.functions import create_default_embed
 
@@ -67,6 +68,24 @@ class Utility(commands.Cog):
         if ctx.author.id != self.bot.owner:
             out = f'{ctx.author.display_name}: ' + repeat
         return await ctx.send(out)
+
+    @commands.command(name='hexcolor', aliases=['color'])
+    async def hexcolor(self, ctx, *, color: str):
+        """
+        Takes a color name and converts it to a hex code.
+        For possible color options, see [this link](https://gist.github.com/Soheab/d9cf3f40e34037cfa544f464fc7d919e)
+        """
+        embed = create_default_embed(ctx)
+        color_converter = commands.ColourConverter()
+        try:
+            color: discord.Colour = await color_converter.convert(ctx, color)
+        except commands.BadArgument:
+            return await ctx.send('You have provided an invalid color. See the link in the help page for a list of '
+                                  'possible colors.')
+        embed.title = str(hex(color.value))
+        embed.colour = color
+
+        await ctx.send(embed=embed)
 
     @commands.command(name='source')
     async def source(self, ctx):
