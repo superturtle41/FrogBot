@@ -13,10 +13,10 @@ from utils.functions import try_delete
 import sentry_sdk
 
 COGS = (
-    'cogs.util', 'jishaku', 'cogs.admin', 'cogs.error_handeling', 'cogs.info',
-    'cogs.custom_commands', 'cogs.keep_alive',
+    'cogs.meta.util', 'jishaku', 'cogs.meta.admin', 'cogs.meta.error_handeling', 'cogs.meta.info',
+    'cogs.custom_commands', 'cogs.meta.keep_alive',
     'cogs.quest_roles', 'cogs.dm_commands', 'cogs.sheet_approval',
-    'cogs.help'
+    'cogs.meta.help'
 )
 
 
