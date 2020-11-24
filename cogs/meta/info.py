@@ -94,7 +94,7 @@ class Info(commands.Cog):
         if not who:
             who = ctx.author
         embed.title = f'Avatar for {who.display_name}'
-        embed.set_image(url=str(who.avatar_url))
+        embed.set_image(url=str(who.avatar_url_as(format='png')))
         return await ctx.send(embed=embed)
 
     @commands.command(name='emoji')

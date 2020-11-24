@@ -49,7 +49,8 @@ class FrogBot(commands.Bot):
         self.api_keys = {
             'dbl_api_key': config.DBL_API_KEY,
             'server_api_url': config.API_URL,
-            'server_api_key': config.API_KEY
+            'server_api_key': config.API_KEY,
+            'dagpi_api_key': config.DAGPI_API_KEY
         }
         self.personal_server = {
             'server_id': None,
