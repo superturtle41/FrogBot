@@ -90,10 +90,12 @@ class Info(commands.Cog):
         """
         Gives you the avatar of whoever you specify, or yourself if you don't specify anyone.
         """
-        url = ctx.author.avatar_url
-        if who:
-            url = who.avatar_url
-        return await ctx.send(url)
+        embed = create_default_embed(ctx)
+        if not who:
+            who = ctx.author
+        embed.title = f'Avatar for {who.display_name}'
+        embed.set_image(url=str(who.avatar_url_as(format='png')))
+        return await ctx.send(embed=embed)
 
     @commands.command(name='emoji')
     async def emoji_info(self, ctx, emoji_to_parse: discord.Emoji):
@@ -107,6 +109,25 @@ class Info(commands.Cog):
         embed.add_field(name='ID', value=emoji_to_parse.guild.id)
 
         embed.set_image(url=str(emoji_to_parse.url))
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='permissions', aliases=['perms'])
+    @commands.guild_only()
+    async def show_perms(self, ctx, who: discord.Member = None):
+        """
+        Shows the permissions for the user specified in the current channel.
+        Will show permissions for yourself if nobody is specified.
+        """
+        if who is None:
+            who = ctx.author
+        embed = create_default_embed(ctx)
+        embed.title = f'Permissions for {who.display_name}'
+        yes, no = "\U00002705", "\U0001f6ab"
+        out = ''
+        for perm, value in who.permissions_in(ctx.channel):
+            out += f'{yes if value else no} | {perm.replace("_", " ").title()}\n'
+        embed.description = out
 
         await ctx.send(embed=embed)
 

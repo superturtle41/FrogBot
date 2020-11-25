@@ -11,6 +11,7 @@ DEFAULT_STATUS = os.environ.get('DISCORD_STATUS', f'with the API')
 API_URL = os.getenv('BOT_API_URL', None)
 API_KEY = os.getenv('BOT_API_KEY', None)
 DBL_API_KEY = os.getenv('BOT_DBL_API_KEY', None)
+DAGPI_API_KEY = os.getenv('BOT_DAGPI_API_KEY', None)
 
 # Version
 VERSION = os.environ.get('VERSION', 'testing')

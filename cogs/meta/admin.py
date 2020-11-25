@@ -23,18 +23,18 @@ class Admin(commands.Cog):
         """
         await ctx.send('give a subcommand nerd')
 
-    @admin.command(name="stop", description="Owner Only - Stops Bot")
+    @admin.command(name="restart")
     @is_owner()
-    async def stop(self, ctx, really: str = "no"):
+    async def restart(self, ctx):
         """
-        Shuts down the bot.
+        Stops the bot, restarting it.
         """
-        await ctx.send("Okay, shutting down...")
-        if really == 'please':
-            await ctx.send('Shutdown complete.')
-            await self.bot.logout()
-        else:
-            await ctx.send('Invalid Control Sequence detected. Operation Aborted.')
+        confirm = await ctx.prompt('Are you sure you want to shutdown the bot?')
+        if confirm:
+            try:
+                await self.bot.logout()
+            except RuntimeError:
+                pass
 
     @admin.command(name='change_status', description='Owner Only - Changes the bot\'s status.')
     @is_owner()

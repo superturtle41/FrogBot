@@ -39,7 +39,8 @@ class HelpBotMenu(menus.ListPageSource):
         # Entries = List[tuple(Cog, Commands)]
         for _, item in enumerate(entries, start=offset):
             command_list = generate_command_names(item[1], short_doc=True)
-            embed.add_field(name=item[0].qualified_name, value='\n'.join(command_list), inline=False)
+            output = '\n'.join(command_list)
+            embed.add_field(name=item[0].qualified_name, value=output, inline=False)
         embed.set_footer(text=f'Page {menu.current_page+1}/{self.get_max_pages()}\n'+self.embed_footer)
         return embed
 

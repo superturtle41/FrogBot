@@ -12,3 +12,7 @@ class UnauthorizedServer(Exception):
 
 class IsNotDM(Exception):
     pass
+
+
+class APIError(Exception):
+    pass
