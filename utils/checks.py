@@ -1,4 +1,5 @@
 from discord.ext import commands
+import discord
 import bot_config as config
 from utils.errors import UnauthorizedServer, IsNotDM
 from utils.constants import ABLE_TO_BAN
@@ -47,6 +48,8 @@ def can_use_dm():
 
 def able_to_ban():
     async def predicate(ctx):
+        if not isinstance(ctx.author, discord.Member):
+            raise commands.NoPrivateMessage()
         if len([r for r in ctx.author.roles if r.name.lower in ABLE_TO_BAN]):
             return True
         raise commands.BadArgument('You are not authorized to run this command!')
