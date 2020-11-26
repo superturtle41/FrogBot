@@ -2,7 +2,6 @@ from discord.ext import commands
 import discord
 import bot_config as config
 from utils.errors import UnauthorizedServer, IsNotDM
-from utils.constants import ABLE_TO_BAN
 
 
 def _is_owner_check(author_id):
