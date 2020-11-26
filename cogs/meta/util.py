@@ -137,6 +137,20 @@ class Utility(commands.Cog):
                             '&scope=bot)'
         await ctx.send(embed=embed)
 
+    @commands.command(name='raw')
+    async def raw_message(self, ctx, message_id: int):
+        """
+        Returns the escaped markdown for a message. The message must be in the same channel as this command.
+        """
+        embed = create_default_embed(ctx)
+        try:
+            message = await ctx.channel.fetch_message(message_id)
+        except discord.NotFound:
+            await ctx.send(f'Could not find the message with ID `{message_id}`')
+        embed.title = f'Escaped Markdown for Message with ID `{message_id}`'
+        embed.description = discord.utils.escape_markdown(message.content)
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Utility(bot))
