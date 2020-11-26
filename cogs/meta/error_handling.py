@@ -95,7 +95,7 @@ class CommandErrorHandler(commands.Cog):
             msg = str(error) or "Missing Unknown Required Argument"
             return await ctx.send(f"Error: {msg}")
 
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, commands.BadArgument) or isinstance(error, commands.BadUnionArgument):
             msg = str(error) or "Unknown Bad Argument"
             return await ctx.send(f'Error: {msg}')
 

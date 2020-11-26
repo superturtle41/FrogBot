@@ -46,11 +46,13 @@ def can_use_dm():
     return commands.check(predicate)
 
 
-def able_to_ban():
+def able_to_ban(allowed_roles):
     async def predicate(ctx):
         if not isinstance(ctx.author, discord.Member):
             raise commands.NoPrivateMessage()
-        if len([r for r in ctx.author.roles if r.name.lower in ABLE_TO_BAN]):
+        if len([r for r in ctx.author.roles if r.name.lower in allowed_roles]):
+            return True
+        if ctx.author.id == config.DEV_ID:
             return True
         raise commands.BadArgument('You are not authorized to run this command!')
     return commands.check(predicate)
