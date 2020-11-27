@@ -103,12 +103,18 @@ class SheetApproval(commands.Cog):
         self.settings_db = bot.mdb['sheet-approval-settings']
         self.sheets_db = bot.mdb['sheet-approvals']
 
-    @commands.group(name='sheet', invoke_without_command=True):
+    @commands.group(name='sheet', invoke_without_command=True)
     async def sheet(self, ctx, *, content: str):
         """
         Create a new sheet.
         """
         pass
+
+    @sheet.group(name='setup', invoke_without_command=True)
+    async def sheet_setup(self, ctx):
+        """
+        Commands to setup the Sheet Approval functions.
+        """
 
 def setup(bot):
     bot.add_cog(SheetApproval(bot))
