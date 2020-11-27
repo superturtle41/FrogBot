@@ -110,11 +110,31 @@ class SheetApproval(commands.Cog):
         """
         pass
 
-    @sheet.group(name='setup', invoke_without_command=True)
-    async def sheet_setup(self, ctx):
+    @sheet.command(name='setup')
+    async def sheet_setup(self, ctx, setting: str, value):
         """
         Commands to setup the Sheet Approval functions.
+        Valid settings:
+        `sheet-channel <channel>` - Sets the channel to watch for new sheets.
+        Will delete any messages that are not sheets in this channel
+        `approved-channel <channel>` - Sets the channel to post the sheet approved message.
+        `approved-role <role mention>` - Sets the role to add when a player is approved.
+        `new-role <role mention>` - Sets the role to removed when a player is approved.
+        `approvals <number of approvals> - Sets the number of approvals required to approve a sheet
         """
+        if setting == 'sheet-channel':
+            pass
+        elif setting == 'approved-channel':
+            pass
+        elif setting == 'approved-role':
+            pass
+        elif setting == 'new-role':
+            pass
+        elif setting == 'approvals':
+            pass
+        else:
+            return await ctx.send(f'Invalid setting `{setting}`\nCheck the help for valid settings\nCase Sensitive!')
+
 
 def setup(bot):
     bot.add_cog(SheetApproval(bot))
