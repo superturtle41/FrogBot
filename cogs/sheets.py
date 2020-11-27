@@ -1,6 +1,17 @@
 from discord.ext import commands
 import discord
 from .models.sheet_errors import NoApprover, NoChannel, NoGuild, NoMessage, NoOwner
+from utils.functions import create_default_embed
+from utils.checks import can_change_sheet_settings
+from utils.constants import ABLE_TO_KICK
+
+
+async def convert_channel(converter: commands.TextChannelConverter, ctx, arg):
+    try:
+        channel = await converter.convert(ctx, str(arg))
+    except commands.ChannelNotFound:
+        return None
+    return channel
 
 
 class Approval:
@@ -102,6 +113,11 @@ class SheetApproval(commands.Cog):
         self.bot = bot
         self.settings_db = bot.mdb['sheet-approval-settings']
         self.sheets_db = bot.mdb['sheet-approvals']
+        self.channel_converter = commands.TextChannelConverter()
+        self.role_converter = commands.RoleConverter()
+
+    async def cog_check(self, ctx):
+        return ctx.guild_id is not None
 
     @commands.group(name='sheet', invoke_without_command=True)
     async def sheet(self, ctx, *, content: str):
@@ -111,6 +127,7 @@ class SheetApproval(commands.Cog):
         pass
 
     @sheet.command(name='setup')
+    @can_change_sheet_settings(ABLE_TO_KICK)
     async def sheet_setup(self, ctx, setting: str, value):
         """
         Commands to setup the Sheet Approval functions.
@@ -122,8 +139,16 @@ class SheetApproval(commands.Cog):
         `new-role <role mention>` - Sets the role to removed when a player is approved.
         `approvals <number of approvals> - Sets the number of approvals required to approve a sheet
         """
+        embed = create_default_embed(ctx)
         if setting == 'sheet-channel':
-            pass
+            channel = convert_channel(self.channel_converter, ctx, value)
+            if channel is None:
+                return await ctx.send(f'Could not find the channel specified with `{value}`')
+            self.settings_db.update_one({'guild_id': ctx.guild.id}, {'$set': {'sheet_channel_id': channel.id}},
+                                        upsert=True)
+            embed.title = f'{ctx.author.display_name} changes the Sheet Channel!'
+            embed.description = f'The channel for sheets has been set to <#{channel.id}>'
+            return await ctx.send(embed=embed)
         elif setting == 'approved-channel':
             pass
         elif setting == 'approved-role':
