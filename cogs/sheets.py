@@ -150,7 +150,14 @@ class SheetApproval(commands.Cog):
             embed.description = f'The channel for sheets has been set to <#{channel.id}>'
             return await ctx.send(embed=embed)
         elif setting == 'approved-channel':
-            pass
+            channel = convert_channel(self.channel_converter, ctx, value)
+            if channel is None:
+                return await ctx.send(f'Could not find the channel specified with `{value}`')
+            self.settings_db.update_one({'guild_id': ctx.guild.id}, {'$set': {'approved_channel_id': channel.id}},
+                                        upsert=True)
+            embed.title = f'{ctx.author.display_name} changes the Approved Channel!'
+            embed.description = f'The channel for approval messages has been set to <#{channel.id}>'
+            return await ctx.send(embed=embed)
         elif setting == 'approved-role':
             pass
         elif setting == 'new-role':
