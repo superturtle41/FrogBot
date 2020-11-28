@@ -6,12 +6,12 @@ from utils.checks import can_change_sheet_settings
 from utils.constants import ABLE_TO_KICK
 
 
-async def convert_channel(converter: commands.TextChannelConverter, ctx, arg):
+async def convert_catch_error(converter, ctx, obj, error):
     try:
-        channel = await converter.convert(ctx, str(arg))
-    except commands.ChannelNotFound:
+        new = await converter.convert(ctx, str(obj))
+    except error:
         return None
-    return channel
+    return new
 
 
 class Approval:
@@ -128,9 +128,10 @@ class SheetApproval(commands.Cog):
 
     @sheet.command(name='setup')
     @can_change_sheet_settings(ABLE_TO_KICK)
-    async def sheet_setup(self, ctx, setting: str, value):
+    async def sheet_setup(self, ctx, setting: str, value=''):
         """
         Commands to setup the Sheet Approval functions.
+        Returns the current value for the setting if no new value is provided.
         Valid settings:
         `sheet-channel <channel>` - Sets the channel to watch for new sheets.
         Will delete any messages that are not sheets in this channel
@@ -139,33 +140,89 @@ class SheetApproval(commands.Cog):
         `new-role <role mention>` - Sets the role to removed when a player is approved.
         `approvals <number of approvals> - Sets the number of approvals required to approve a sheet
         """
+
+        async def get_setting(guild_id, setting_name):
+            db_response = await self.settings_db.find_one({'guild_id': guild_id})
+            if db_response is None:
+                return None
+            if setting_name not in db_response:
+                return None
+            return db_response[setting_name]
+
+        async def set_setting(guild_id, setting_name, setting_value, upsert=True):
+            await self.settings_db.update_one({'guild_id': guild_id},
+                                              {'$set': {setting_name: setting_value}}, upsert=upsert)
+            return setting_value
+
         embed = create_default_embed(ctx)
+        embed.title = f'Sheet Approval Settings for {ctx.guild.name}'
         if setting == 'sheet-channel':
-            channel = convert_channel(self.channel_converter, ctx, value)
+            if value == '':
+                current = await get_setting(ctx.guild.id, 'sheet-channel')
+                embed.add_field(name='Sheet Channel', value="<#"+current+">" if current else "Not set.")
+                return await ctx.send(embed=embed)
+            channel = convert_catch_error(self.channel_converter, ctx, value, commands.ChannelNotFound)
             if channel is None:
-                return await ctx.send(f'Could not find the channel specified with `{value}`')
-            self.settings_db.update_one({'guild_id': ctx.guild.id}, {'$set': {'sheet_channel_id': channel.id}},
-                                        upsert=True)
-            embed.title = f'{ctx.author.display_name} changes the Sheet Channel!'
-            embed.description = f'The channel for sheets has been set to <#{channel.id}>'
+                embed.add_field(name='Sheet Channel',
+                                value=f'Error! Could not find the channel specified with `{value}`.')
+                return await ctx.send(embed=embed)
+            await set_setting(ctx.guild.id, 'sheet-channel', channel.id)
+            embed.add_field(name='Sheet Channel', value=f'The channel for sheets has been set to <#{channel.id}>')
             return await ctx.send(embed=embed)
         elif setting == 'approved-channel':
-            channel = convert_channel(self.channel_converter, ctx, value)
+            if value == '':
+                current = await get_setting(ctx.guild.id, 'approved-channel')
+                embed.add_field(name='Approval Channel', value="<#"+current+">" if current else "Not set.")
+                return await ctx.send(embed=embed)
+            channel = convert_catch_error(self.channel_converter, ctx, value, commands.ChannelNotFound)
             if channel is None:
-                return await ctx.send(f'Could not find the channel specified with `{value}`')
-            self.settings_db.update_one({'guild_id': ctx.guild.id}, {'$set': {'approved_channel_id': channel.id}},
-                                        upsert=True)
-            embed.title = f'{ctx.author.display_name} changes the Approved Channel!'
-            embed.description = f'The channel for approval messages has been set to <#{channel.id}>'
+                embed.add_field(name='Approval Channel',
+                                value=f'Error! Could not find the channel specified with `{value}`.')
+                return await ctx.send(embed=embed)
+            await set_setting(ctx.guild.id, 'approved-channel', channel.id)
+            embed.add_field(name='Approval Channel',
+                            value=f'The channel for approval messages has been set to <#{channel.id}>.')
             return await ctx.send(embed=embed)
         elif setting == 'approved-role':
-            pass
+            if value == '':
+                current = await get_setting(ctx.guild.id, 'approved-role')
+                embed.add_field(name='Approved Role', value="<@" + current + ">" if current else "Not set.")
+                return await ctx.send(embed=embed)
+            role = convert_catch_error(self.role_converter, ctx, value, commands.RoleNotFound)
+            if role is None:
+                embed.add_field(name='Approved Role', value=f'Error! Could not find the role specified with `{value}`.')
+                return await ctx.send(embed=embed)
+            await set_setting(ctx.guild.id, 'approve-role', role.id)
+            embed.add_field(name='Approved Role', value=f'The role for approval has been set to <@{role.id}>')
+            return await ctx.send(embed=embed)
         elif setting == 'new-role':
-            pass
+            if value == '':
+                current = await get_setting(ctx.guild.id, 'new-role')
+                embed.add_field(name='Newb Role', value="<@" + current + ">" if current else "Not set.")
+                return await ctx.send(embed=embed)
+            role = convert_catch_error(self.role_converter, ctx, value, commands.RoleNotFound)
+            if role is None:
+                embed.add_field(name='Newb Role', value=f'Error! Could not find the role specified with `{value}`.')
+                return await ctx.send(embed=embed)
+            await set_setting(ctx.guild.id, 'new-role', role.id)
+            embed.add_field(name='Newb Role', value=f'The role to take from newbs has been set to <@{role.id}>.')
+            return await ctx.send(embed=embed)
         elif setting == 'approvals':
-            pass
+            if value == '':
+                current = await get_setting(ctx.guild.id, 'approvals')
+                embed.add_field(name='# of Approvals', value=str(int(current) if current else 2))
+                return await ctx.send(embed=embed)
+            try:
+                amount = int(value)
+            except ValueError:
+                embed.add_field(name='# of Approvals', value=f'Error! {value} is not a valid number.')
+                return await ctx.send(embed=embed)
+            await set_setting(ctx.guild.id, 'approvals', amount)
+            embed.add_field(name='# of Approvals', value=f'The number of approvals required has been set to {amount}.')
+            return await ctx.send(embed=embed)
         else:
-            return await ctx.send(f'Invalid setting `{setting}`\nCheck the help for valid settings\nCase Sensitive!')
+            embed.description = f'Invalid setting `{setting}`\nCheck the help for valid settings\nCase Sensitive!'
+            return await ctx.send(embed=embed)
 
 
 def setup(bot):
