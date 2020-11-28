@@ -37,7 +37,7 @@ def can_use_dm():
             raise commands.BotMissingPermissions('manage_messages')
         # can the user use the command
         for role in ctx.author.roles:
-            if role.name.lower() == 'dm':
+            if role.name.lower() in ["Dungeon Master", "Quest Master", "Jr.Quest Runner"]:
                 return True
         if _is_owner_check(ctx.author.id):
             return True
