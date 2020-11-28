@@ -6,14 +6,6 @@ from utils.checks import can_change_sheet_settings
 from utils.constants import ABLE_TO_KICK
 
 
-async def convert_catch_error(converter, ctx, obj, error):
-    try:
-        new = await converter.convert(ctx, str(obj))
-    except error:
-        return None
-    return new
-
-
 class Approval:
     def __init__(self, approver: discord.Member, guild: discord.Guild):
         self._approver = approver
@@ -108,6 +100,14 @@ class Sheet:
         self._approvals = value
 
 
+async def convert_catch_error(converter, ctx, obj, error):
+    try:
+        new = await converter.convert(ctx, str(obj))
+    except error:
+        return None
+    return new
+
+
 class SheetApproval(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -135,6 +135,14 @@ class SheetApproval(commands.Cog):
         if setting_name in db_settings:
             return db_settings[setting_name]
         return None
+
+    @commands.Cog.listener('on_raw_reaction_add')
+    async def check_for_approval(self, payload):
+        pass  # TODO
+
+    @commands.Cog.listener('on_raw_reaction_remove')
+    async def check_for_deny(self, payload):
+        pass  # TODO
 
     @commands.group(name='sheet', invoke_without_command=True)
     async def sheet(self, ctx, *, content: str):
