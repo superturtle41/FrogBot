@@ -47,7 +47,7 @@ class Approval:
 
 class Sheet:
     def __init__(self, owner: discord.Member, guild: discord.Guild, channel: discord.TextChannel,
-                 message: discord.Message, approvals: list[Approval]):
+                 message: discord.Message, approvals: list):
         self._owner = owner
         self._guild = guild
         self._channel = channel,
@@ -119,12 +119,29 @@ class SheetApproval(commands.Cog):
     async def cog_check(self, ctx):
         return ctx.guild_id is not None
 
+    async def get_server_setting(self, guild_id, setting_name):
+        """
+        :param int guild_id: ID of guild of which to check
+        :param str setting_name: The name of the setting you want to get.
+        :return: The value of the setting or None
+        :rtype: str or None
+        """
+        settings = ['sheet-channel', 'approved-channel', 'approved-role', 'new-role', 'approvals']
+        if setting_name not in settings:
+            return None
+        db_settings = await self.settings_db.find_one({'guild_id': guild_id})
+        if db_settings is None:
+            return None
+        if setting_name in db_settings:
+            return db_settings[setting_name]
+        return None
+
     @commands.group(name='sheet', invoke_without_command=True)
     async def sheet(self, ctx, *, content: str):
         """
         Create a new sheet.
         """
-        pass
+        raise NotImplementedError()
 
     @sheet.command(name='setup')
     @can_change_sheet_settings(ABLE_TO_KICK)
@@ -138,7 +155,7 @@ class SheetApproval(commands.Cog):
         `approved-channel <channel>` - Sets the channel to post the sheet approved message.
         `approved-role <role mention>` - Sets the role to add when a player is approved.
         `new-role <role mention>` - Sets the role to removed when a player is approved.
-        `approvals <number of approvals> - Sets the number of approvals required to approve a sheet
+        `approvals <number of approvals>` - Sets the number of approvals required to approve a sheet
         """
 
         async def get_setting(guild_id, setting_name):
@@ -159,9 +176,9 @@ class SheetApproval(commands.Cog):
         if setting == 'sheet-channel':
             if value == '':
                 current = await get_setting(ctx.guild.id, 'sheet-channel')
-                embed.add_field(name='Sheet Channel', value="<#"+current+">" if current else "Not set.")
+                embed.add_field(name='Sheet Channel', value=f"<#{current}>" if current else "Not set.")
                 return await ctx.send(embed=embed)
-            channel = convert_catch_error(self.channel_converter, ctx, value, commands.ChannelNotFound)
+            channel = await convert_catch_error(self.channel_converter, ctx, value, commands.ChannelNotFound)
             if channel is None:
                 embed.add_field(name='Sheet Channel',
                                 value=f'Error! Could not find the channel specified with `{value}`.')
@@ -172,9 +189,9 @@ class SheetApproval(commands.Cog):
         elif setting == 'approved-channel':
             if value == '':
                 current = await get_setting(ctx.guild.id, 'approved-channel')
-                embed.add_field(name='Approval Channel', value="<#"+current+">" if current else "Not set.")
+                embed.add_field(name='Approval Channel', value=f"<#{current}>" if current else "Not set.")
                 return await ctx.send(embed=embed)
-            channel = convert_catch_error(self.channel_converter, ctx, value, commands.ChannelNotFound)
+            channel = await convert_catch_error(self.channel_converter, ctx, value, commands.ChannelNotFound)
             if channel is None:
                 embed.add_field(name='Approval Channel',
                                 value=f'Error! Could not find the channel specified with `{value}`.')
@@ -186,9 +203,9 @@ class SheetApproval(commands.Cog):
         elif setting == 'approved-role':
             if value == '':
                 current = await get_setting(ctx.guild.id, 'approved-role')
-                embed.add_field(name='Approved Role', value="<@" + current + ">" if current else "Not set.")
+                embed.add_field(name='Approved Role', value=f"<@{current}>" if current else "Not set.")
                 return await ctx.send(embed=embed)
-            role = convert_catch_error(self.role_converter, ctx, value, commands.RoleNotFound)
+            role = await convert_catch_error(self.role_converter, ctx, value, commands.RoleNotFound)
             if role is None:
                 embed.add_field(name='Approved Role', value=f'Error! Could not find the role specified with `{value}`.')
                 return await ctx.send(embed=embed)
@@ -198,9 +215,9 @@ class SheetApproval(commands.Cog):
         elif setting == 'new-role':
             if value == '':
                 current = await get_setting(ctx.guild.id, 'new-role')
-                embed.add_field(name='Newb Role', value="<@" + current + ">" if current else "Not set.")
+                embed.add_field(name='Newb Role', value=f"<@{current}>" if current else "Not set.")
                 return await ctx.send(embed=embed)
-            role = convert_catch_error(self.role_converter, ctx, value, commands.RoleNotFound)
+            role = await convert_catch_error(self.role_converter, ctx, value, commands.RoleNotFound)
             if role is None:
                 embed.add_field(name='Newb Role', value=f'Error! Could not find the role specified with `{value}`.')
                 return await ctx.send(embed=embed)
@@ -221,7 +238,7 @@ class SheetApproval(commands.Cog):
             embed.add_field(name='# of Approvals', value=f'The number of approvals required has been set to {amount}.')
             return await ctx.send(embed=embed)
         else:
-            embed.description = f'Invalid setting `{setting}`\nCheck the help for valid settings\nCase Sensitive!'
+            embed.description = f'Invalid setting `{setting}`\nCheck the help for valid settings (Case Sensitive!)'
             return await ctx.send(embed=embed)
 
 
