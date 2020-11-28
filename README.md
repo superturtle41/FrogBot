@@ -7,7 +7,7 @@ FrogBot is written in [discord.py](https://github.com/Rapptz/discord.py) and use
 
 Requirements
 ------------
-* Python 3.x.x
+* Python 3.8.x
 * Pip
 * MongoDB Server
 
