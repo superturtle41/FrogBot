@@ -5,7 +5,7 @@ DATE_FORMAT = '%A, %B %d, %Y at %I:%M:%S %pZ'
 ABLE_TO_BAN = ('bot admin', )
 ABLE_TO_KICK = ('bot admin', 'moderator')
 BOT_MODS = ('DM', 'Dragonspeaker', 'Bot Admin')
-DMS = ('DM', 'Trial DM')
+DMS = ('DM', 'Trial DM', 'Dungeon Master', 'Quest Master', 'Jr.Quest Runner')
 
 STATUS_EMOJIS = {
     'online': '<:online:777327482054901781>',

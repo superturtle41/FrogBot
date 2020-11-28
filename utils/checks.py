@@ -2,7 +2,7 @@ from discord.ext import commands
 import discord
 import bot_config as config
 from utils.errors import UnauthorizedServer, IsNotDM
-
+from utils.constants import DMS
 
 def _is_owner_check(author_id):
     return author_id == config.DEV_ID
@@ -37,7 +37,7 @@ def can_use_dm():
             raise commands.BotMissingPermissions('manage_messages')
         # can the user use the command
         for role in ctx.author.roles:
-            if role.name.lower() in ["Dungeon Master", "Quest Master", "Jr.Quest Runner"]:
+            if role.name.lower() in DMS:
                 return True
         if _is_owner_check(ctx.author.id):
             return True
