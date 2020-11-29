@@ -11,7 +11,7 @@ class QuestRoles(commands.Cog):
 
     @commands.command(name='questrole', description='Creates a role for quests')
     @commands.bot_has_guild_permissions(manage_roles=True)
-    @commands.has_any_role(DMS)
+    @commands.has_any_role(*DMS)
     async def create_quest_role(self, ctx):
         """
         Creates a Role for Quests
