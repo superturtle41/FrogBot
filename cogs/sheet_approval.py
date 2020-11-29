@@ -56,8 +56,8 @@ class ToBeApproved:
             mention = guild.get_member(self.owner_id)
             embed.add_field(name=f'Approved!',
                             value=f'{mention.mention}, Your character has been approved! '
-                                  f'Go to <#707974596816535553> and grab your player roles,'
-                                  f' and then go to <#608030916778000395> and do the pinned commands for your sheet!',
+                                  f'Go to {ROLES_CHANNEL} and grab your player roles,'
+                                  f' and then go to {AVRAE_CHANNEL} and do the pinned commands for your sheet!',
                             inline=False)
             general = None
             if bot.personal_server['general_channel'] is not None:
@@ -65,7 +65,7 @@ class ToBeApproved:
             if general is not None:
                 await general.send(f'{mention.mention}, your character with the following content has been approved:\n'
                                    f'```\n{embed.description}\n```\n'
-                                   f'Check your submission in <#607374590146117653> for details on what to do next.',
+                                   f'Check your submission in {self.bot.personal_server["sheet_channel"]} for details on what to do next.',
                                    allowed_mentions=discord.AllowedMentions(users=[mention]))
         await message.edit(embed=embed)
 
