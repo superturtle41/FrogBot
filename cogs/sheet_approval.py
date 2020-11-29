@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 from utils.checks import is_personal_server, is_owner
-from utils.constants import BOT_MODS
+from utils.constants import BOT_MODS, APPROVAL_ROLES
 from utils.functions import create_default_embed
 
 log = logging.getLogger('sheet approval')
@@ -106,7 +106,6 @@ class ToBeApproved:
             await member.remove_roles(commoner_role, reason='Approved.')
 
 
-APPROVAL_ROLES = ('dm', 'lord of the sheet')
 
 
 class SheetApproval(commands.Cog):

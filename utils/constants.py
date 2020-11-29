@@ -6,6 +6,7 @@ ABLE_TO_BAN = ('bot admin', )
 ABLE_TO_KICK = ('bot admin', 'moderator')
 BOT_MODS = ('DM', 'Dragonspeaker', 'Bot Admin')
 DMS = ('dm', 'trial dm', 'dungeon master', 'quest master', 'jr.quest runner')
+APPROVAL_ROLES = ('dm', 'lord of the sheet', 'dungeon master', 'quest master')
 
 STATUS_EMOJIS = {
     'online': '<:online:777327482054901781>',
