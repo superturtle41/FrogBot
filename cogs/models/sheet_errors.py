@@ -1,18 +1,22 @@
-class NoGuild(Exception):
+class SheetError(Exception):
     pass
 
 
-class NoOwner(Exception):
+class NoGuild(SheetError):
     pass
 
 
-class NoApprover(Exception):
+class NoOwner(SheetError):
     pass
 
 
-class NoChannel(Exception):
+class NoApprover(SheetError):
     pass
 
 
-class NoMessage(Exception):
+class NoChannel(SheetError):
+    pass
+
+
+class NoMessage(SheetError):
     pass

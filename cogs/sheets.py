@@ -1,13 +1,43 @@
 from discord.ext import commands
 import discord
-from .models.sheet_errors import NoApprover, NoChannel, NoGuild, NoMessage, NoOwner
+from .models.sheet_errors import NoApprover, NoChannel, NoGuild, NoMessage, NoOwner, SheetError
 from utils.functions import create_default_embed
 from utils.checks import can_change_sheet_settings
 from utils.constants import ABLE_TO_KICK
 
 
+class EmojiContext:
+    def __init__(self, guild, channel, message, member):
+        self.guild = guild
+        self.channel = channel
+        self.message = message
+        self.owner = member
+
+    @classmethod
+    def from_payload(cls, bot, data):
+        """
+        :param bot: The bot to use to get the data from
+        :param data: Payload Data - Must be a guild reaction
+        :return: EmojiContext or None
+        """
+        if data['guild_id'] is None:
+            return None
+        guild = bot.get_guild(data['guild_id'])
+        channel = guild.get_channel(data['channel_id'])
+        member = guild.get_member(data['user_id'])
+        message = channel.fetch_message(data['message_id'])
+        return cls(guild=guild, channel=channel, message=message, member=member)
+
+
 class Approval:
     def __init__(self, approver: discord.Member, guild: discord.Guild):
+        """
+        Represents an approval on a sheet.
+        :param approver: The member who is approving
+        :type: discord.Member
+        :param guild:
+        :type: discord.Guild
+        """
         self._approver = approver
         self._guild = guild
 
@@ -21,6 +51,12 @@ class Approval:
 
     @classmethod
     async def from_dict(cls, bot, data):
+        """
+        Takes a database object and converts it to an approval
+        :param bot: Bot to get the guild from
+        :param data: Data containing the guild id and member id.
+        :return: Approval
+        """
         guild = bot.get_guild(data['guild_id'])
         if guild is None:
             raise NoGuild('Guild does not exist.')
@@ -40,9 +76,22 @@ class Approval:
 class Sheet:
     def __init__(self, owner: discord.Member, guild: discord.Guild, channel: discord.TextChannel,
                  message: discord.Message, approvals: list):
+        """
+        An object representing a Sheet to approve.
+        :param owner: Owner of the Sheet
+        :type: discord.Member
+        :param guild: Guild in which the sheet resides in.
+        :type: discord.Guild
+        :param channel: The Channel in which the sheet was sent. Used for fetching messages.
+        :type: discord.TextChannel
+        :param message: The actual message of the sheet containing the embed.
+        :type: discord.Message
+        :param approvals: List of approvals for the sheet.
+        :type: list[Approval]
+        """
         self._owner = owner
         self._guild = guild
-        self._channel = channel,
+        self._channel = channel
         self._message = message
         self._approvals = approvals
 
@@ -65,6 +114,41 @@ class Sheet:
             approvals.append(Approval.from_dict(bot, raw_approval))
         return cls(owner=member, guild=guild, channel=channel, message=message, approvals=approvals)
 
+    @classmethod
+    async def new_from_ctx(cls, ctx, content):
+        """
+        Takes in the context and the content, and creates a new sheet.
+        :param ctx: Context to use
+        :param content: Content of sheet.
+        :return: Sheet
+        """
+        # Send Message
+        embed = create_default_embed(ctx)
+        embed.title = f'Sheet Approval - {ctx.author.display_name}'
+        embed.description = content
+
+        msg = await ctx.send(embed=embed)
+        return Sheet(
+            owner=ctx.author,
+            guild=ctx.guild,
+            channel=ctx.channel,
+            message=msg,
+            approvals=[]
+        )
+
+    @classmethod
+    async def from_emoji_context(cls, bot, db, ctx: EmojiContext):
+        """
+        :param bot: The bot to use to fetch the models from.
+        :param db: Database to fetch information from
+        :param ctx: EmojiContext to use to query DB
+        :return: Sheet or None
+        """
+        data = await db.find_one({'guild_id': ctx.guild.id, 'message_id': ctx.message.id})
+        if data is None:
+            return None
+        return cls.from_dict(bot, data)
+
     def to_dict(self):
         return {
             'type': 'sheet',
@@ -74,6 +158,11 @@ class Sheet:
             'message_id': self.message.id,
             'approvals': [a.to_dict() for a in self.approvals]
         }
+
+    async def save(self, db, upsert=True):
+        await db.update_one({'guild_id': self.guild.id, 'message_id': self.message.id},
+                            {'$set': self.to_dict()},
+                            upsert=upsert)
 
     @property
     def owner(self):
@@ -101,6 +190,14 @@ class Sheet:
 
 
 async def convert_catch_error(converter, ctx, obj, error):
+    """
+    Takes a converter and trie to convert something, returning None on an error
+    :param converter:
+    :param ctx: Context to convert with
+    :param obj: The object to convert - Usually string
+    :param error: The error to ignore.
+    :return: Converted Object or None
+    """
     try:
         new = await converter.convert(ctx, str(obj))
     except error:
@@ -115,41 +212,55 @@ class SheetApproval(commands.Cog):
         self.sheets_db = bot.mdb['sheet-approvals']
         self.channel_converter = commands.TextChannelConverter()
         self.role_converter = commands.RoleConverter()
+        self.settings = {'sheet-channel', 'approved-channel', 'approved-role', 'new-role', 'approvals'}
 
     async def cog_check(self, ctx):
         return ctx.guild_id is not None
 
-    async def get_server_setting(self, guild_id, setting_name):
-        """
-        :param int guild_id: ID of guild of which to check
-        :param str setting_name: The name of the setting you want to get.
-        :return: The value of the setting or None
-        :rtype: str or None
-        """
-        settings = ['sheet-channel', 'approved-channel', 'approved-role', 'new-role', 'approvals']
-        if setting_name not in settings:
-            return None
+    async def server_has_settings(self, guild_id):
         db_settings = await self.settings_db.find_one({'guild_id': guild_id})
         if db_settings is None:
-            return None
-        if setting_name in db_settings:
-            return db_settings[setting_name]
-        return None
+            return False
+        for setting in self.settings:
+            if setting == 'approvals':
+                continue
+            if setting not in db_settings:
+                return False
+        return True
 
     @commands.Cog.listener('on_raw_reaction_add')
     async def check_for_approval(self, payload):
-        pass  # TODO
+        context = EmojiContext.from_payload(payload)
+        try:
+            sheet = await Sheet.from_emoji_context(self.bot, self.sheets_db, context)
+        except SheetError:
+            return
+        if sheet is None:
+            return
 
     @commands.Cog.listener('on_raw_reaction_remove')
     async def check_for_deny(self, payload):
-        pass  # TODO
+        context = EmojiContext.from_payload(payload)
+        try:
+            sheet = await Sheet.from_emoji_context(self.bot, self.sheets_db, context)
+        except SheetError:
+            return
+        if sheet is None:
+            return
 
     @commands.group(name='sheet', invoke_without_command=True)
     async def sheet(self, ctx, *, content: str):
         """
         Create a new sheet.
         """
-        raise NotImplementedError()
+        # Check to make sure all of the settings exist
+        if not await self.server_has_settings(ctx.guild_id):
+            await ctx.send('This server does not have all the required settings set up! Contact an administrator'
+                           'for more details.\nThis message will delete itself in 10 seconds.', delete_after=10)
+
+        # Create the Sheet Object
+        new_sheet = await Sheet.new_from_ctx(ctx, content)
+        await new_sheet.save(self.sheets_db)
 
     @sheet.command(name='setup')
     @can_change_sheet_settings(ABLE_TO_KICK)
