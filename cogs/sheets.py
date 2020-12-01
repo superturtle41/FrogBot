@@ -256,7 +256,8 @@ class SheetApproval(commands.Cog):
         # Check to make sure all of the settings exist
         if not await self.server_has_settings(ctx.guild_id):
             return await ctx.send('This server does not have all the required settings set up! Contact an administrator'
-                                  'for more details.\nThis message will delete itself in 10 seconds.', delete_after=10)
+                                  'for more details.\n(This message will delete itself in 10 seconds.)',
+                                  delete_after=10)
 
         # Create the Sheet Object
         new_sheet = await Sheet.new_from_ctx(ctx, content)
@@ -355,6 +356,11 @@ class SheetApproval(commands.Cog):
                 return await ctx.send(embed=embed)
             await set_setting(ctx.guild.id, 'approvals', amount)
             embed.add_field(name='# of Approvals', value=f'The number of approvals required has been set to {amount}.')
+            return await ctx.send(embed=embed)
+        elif setting == 'list':
+            for setting in self.settings:
+                setting_value = await get_setting(ctx.guild.id, setting)
+                embed.add_field(name=setting, value=setting_value if setting_value else 'Not set!')
             return await ctx.send(embed=embed)
         else:
             embed.description = f'Invalid setting `{setting}`\nCheck the help for valid settings (Case Sensitive!)'
