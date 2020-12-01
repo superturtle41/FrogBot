@@ -14,18 +14,18 @@ class EmojiContext:
         self.owner = member
 
     @classmethod
-    def from_payload(cls, bot, data):
+    async def from_payload(cls, bot, data):
         """
         :param bot: The bot to use to get the data from
         :param data: Payload Data - Must be a guild reaction
         :return: EmojiContext or None
         """
-        if data['guild_id'] is None:
+        if data.guild_id is None:
             return None
-        guild = bot.get_guild(data['guild_id'])
-        channel = guild.get_channel(data['channel_id'])
-        member = guild.get_member(data['user_id'])
-        message = channel.fetch_message(data['message_id'])
+        guild = bot.get_guild(data.guild_id)
+        channel = guild.get_channel(data.channel_id)
+        member = guild.get_member(data.user_id)
+        message = await channel.fetch_message(data.message_id)
         return cls(guild=guild, channel=channel, message=message, member=member)
 
 
@@ -230,7 +230,7 @@ class SheetApproval(commands.Cog):
 
     @commands.Cog.listener('on_raw_reaction_add')
     async def check_for_approval(self, payload):
-        context = EmojiContext.from_payload(payload)
+        context = await EmojiContext.from_payload(self.bot, payload)
         try:
             sheet = await Sheet.from_emoji_context(self.bot, self.sheets_db, context)
         except SheetError:
@@ -240,7 +240,7 @@ class SheetApproval(commands.Cog):
 
     @commands.Cog.listener('on_raw_reaction_remove')
     async def check_for_deny(self, payload):
-        context = EmojiContext.from_payload(payload)
+        context = await EmojiContext.from_payload(self.bot, payload)
         try:
             sheet = await Sheet.from_emoji_context(self.bot, self.sheets_db, context)
         except SheetError:
@@ -255,8 +255,8 @@ class SheetApproval(commands.Cog):
         """
         # Check to make sure all of the settings exist
         if not await self.server_has_settings(ctx.guild_id):
-            await ctx.send('This server does not have all the required settings set up! Contact an administrator'
-                           'for more details.\nThis message will delete itself in 10 seconds.', delete_after=10)
+            return await ctx.send('This server does not have all the required settings set up! Contact an administrator'
+                                  'for more details.\nThis message will delete itself in 10 seconds.', delete_after=10)
 
         # Create the Sheet Object
         new_sheet = await Sheet.new_from_ctx(ctx, content)
