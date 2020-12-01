@@ -3,7 +3,7 @@ import discord
 from .models.sheet_errors import NoApprover, NoChannel, NoGuild, NoMessage, NoOwner, SheetError
 from utils.functions import create_default_embed
 from utils.checks import can_change_sheet_settings
-from utils.constants import ABLE_TO_KICK
+from utils.constants import ABLE_TO_APPROVE, SETTINGS_CHANGE
 
 
 class EmojiContext:
@@ -263,7 +263,7 @@ class SheetApproval(commands.Cog):
         await new_sheet.save(self.sheets_db)
 
     @sheet.command(name='setup')
-    @can_change_sheet_settings(ABLE_TO_KICK)
+    @can_change_sheet_settings(SETTINGS_CHANGE)
     async def sheet_setup(self, ctx, setting: str, value=''):
         """
         Commands to setup the Sheet Approval functions.
