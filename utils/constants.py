@@ -2,6 +2,11 @@ SUPPORT_SERVER_ID = 755202524859859004
 
 DATE_FORMAT = '%A, %B %d, %Y at %I:%M:%S %pZ'
 
+# Sheet Approval
+SETTINGS_CHANGE = {'bot admin', }
+ABLE_TO_APPROVE = {'bot admin', 'dm', 'lord of the sheet', 'sheet approver'}
+
+# Moderation
 ABLE_TO_BAN = ('bot admin', )
 ABLE_TO_KICK = ('bot admin', 'moderator')
 BOT_MODS = ('DM', 'Dragonspeaker', 'Bot Admin')
