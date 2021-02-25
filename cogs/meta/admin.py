@@ -178,6 +178,7 @@ class Admin(commands.Cog):
 
         Can only be ran in a guild. If no prefix is specified, will show the current prefix.
         """
+        embed = create_default_embed(ctx)
         guild_id = str(ctx.guild.id)
         if to_change is None:
             if guild_id in self.bot.prefixes:
@@ -189,13 +190,16 @@ class Admin(commands.Cog):
                 else:
                     prefix = self.bot.prefix
                 self.bot.prefixes[guild_id] = prefix
-            return await ctx.send(f'No prefix specified to Change. Current Prefix: `{prefix}`')
+            embed.title = f'Prefix for {ctx.guild.name}'
+            embed.description = f'Current Prefix: `{prefix}`'
+            return await ctx.send(embed=embed)
         else:
             await ctx.bot.mdb['prefixes'].update_one({'guild_id': guild_id},
                                                      {'$set': {'prefix': to_change}}, upsert=True)
             ctx.bot.prefixes[guild_id] = to_change
-            return await ctx.send(f'Guild prefix updated to `{to_change}`')
-
+            embed.title = f'Prefix updated for {ctx.guild.name}!'
+            embed.description = f'Server prefix updated to `{to_change}`'
+            return await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Admin(bot))
