@@ -97,7 +97,7 @@ class FrogBot(commands.Bot):
 
 intents = discord.Intents(
     guilds=True, members=True, messages=True, reactions=True,
-    bans=False, emojis=True, integrations=False, webhooks=False, invites=False, voice_states=False, presences=True,
+    bans=False, emojis=True, integrations=False, webhooks=False, invites=False, voice_states=False, presences=False,
     typing=False
 )
 
@@ -186,6 +186,15 @@ async def on_guild_join(joined):
         if joined.system_channel:
             await joined.system_channel.send('Until I am verified, I cannot join any more servers.')
         await joined.leave()
+
+
+@bot.event
+async def on_guild_remove(guild):
+    # delete any prefixes
+    try:
+        await bot.mdb['prefixes'].delete_one({'guild_id': str(guild.id)})
+    except Exception:
+        pass
 
 
 for cog in COGS:

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from utils.constants import STATUS_EMOJIS, STATUS_NAMES, BADGE_EMOJIS, SUPPORT_SERVER_ID, DATE_FORMAT
+from utils.constants import BADGE_EMOJIS, SUPPORT_SERVER_ID, DATE_FORMAT
 from utils.functions import create_default_embed, member_in_guild
 
 
@@ -67,8 +67,6 @@ class Info(commands.Cog):
         embed.add_field(name='Name', value=f'{who.mention}')
         embed.add_field(name='Username', value=f'{who.name}#{who.discriminator}')
         embed.add_field(name='ID', value=f'{who.id}')
-        embed.add_field(name='Status', value=f'Status: {STATUS_EMOJIS[str(who.status)]}'
-                                             f' ({STATUS_NAMES[str(who.status)]})')
 
         # -- Roles --
         embed.add_field(name='Roles', value=f'{len(who.roles)} role(s)')

@@ -44,7 +44,7 @@ class Utility(commands.Cog):
                             value=f'{time_to_readable(datetime.utcnow() - self.bot.ready_time)}')
         return await ctx.send(embed=embed)
 
-    @commands.command(name='info', aliases=['stats', 'about'])
+    @commands.command(name='info', aliases=['stats', 'about', 'privacy'])
     async def info(self, ctx):
         """
         Displays some information about the bot.
@@ -55,6 +55,9 @@ class Utility(commands.Cog):
         members = sum([guild.member_count for guild in self.bot.guilds])
         embed.add_field(name='Guilds', value=f'{len(self.bot.guilds)}')
         embed.add_field(name='Members', value=f'{members}')
+        embed.add_field(name='Concerns', value='Do you have any concerns/privacy issues/security issues?\nContact me by'
+                                               ' [joining the support server!](https://discord.gg/nNutJ8PyFu)',
+                        inline=False)
         embed.url = 'https://github.com/1drturtle/FrogBot'
 
         await ctx.send(embed=embed)
